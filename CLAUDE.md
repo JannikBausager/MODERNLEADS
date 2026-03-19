@@ -1,4 +1,4 @@
-# CRM Lite (BC Leads) — Claude Code Instructions
+# Lead Copilot (BC Leads) — Claude Code Instructions
 
 ## Goal
 Build an MVP lead management system for SMBs:

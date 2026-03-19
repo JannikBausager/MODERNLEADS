@@ -14,7 +14,7 @@ export function renderNav(sidebar: HTMLElement): void {
 
   const brand = document.createElement('div');
   brand.className = 'nav-brand';
-  brand.innerHTML = '<span class="nav-brand-icon">🚀</span> CRM Lite';
+  brand.innerHTML = '<span class="nav-brand-icon">🚀</span> Lead Copilot';
   sidebar.appendChild(brand);
 
   const list = document.createElement('ul');

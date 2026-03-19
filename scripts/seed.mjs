@@ -29,7 +29,7 @@ async function post(path, body) {
 }
 
 async function seed() {
-  console.log('🌱 Seeding CRM Lite database...\n');
+  console.log('🌱 Seeding Lead Copilot database...\n');
 
   const created = [];
   for (const lead of leads) {
