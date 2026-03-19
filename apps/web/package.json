@@ -1,0 +1,14 @@
+{
+  "name": "@modernleads/web",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "vite --port 5173",
+    "build": "vite build",
+    "lint": "echo ok",
+    "test": "echo ok"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
+  }
+}
