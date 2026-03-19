@@ -63,6 +63,22 @@ db.exec(`
     payload TEXT DEFAULT '{}',
     timestamp TEXT NOT NULL DEFAULT (datetime('now'))
   );
+
+  CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updatedAt TEXT NOT NULL DEFAULT (datetime('now'))
+  );
 `);
+
+// Insert default BC settings
+const insertSetting = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');
+insertSetting.run('bc_tenant', 'DirectionsEmeaWorkshop1.onmicrosoft.com');
+insertSetting.run('bc_environment', 'PRODUCTION');
+insertSetting.run('bc_company', 'CRONUS USA, Inc.');
+insertSetting.run('bc_mcp_config', 'MCPleads');
+insertSetting.run('bc_auth_type', 'none');
+insertSetting.run('bc_access_token', '');
+insertSetting.run('bc_mcp_enabled', 'false');
 
 export function getDb() { return db; }

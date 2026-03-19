@@ -186,3 +186,46 @@ export function logTelemetry(event: string, entityId: string, payload?: any): vo
   `);
   stmt.run(event, entityId, JSON.stringify(payload ?? {}));
 }
+
+// Settings helpers
+
+export function getSetting(key: string): string | null {
+  const stmt = db.prepare('SELECT value FROM settings WHERE key = ?');
+  const row = stmt.get(key) as any;
+  return row ? row.value : null;
+}
+
+export function setSetting(key: string, value: string): void {
+  const stmt = db.prepare('INSERT OR REPLACE INTO settings (key, value, updatedAt) VALUES (?, ?, datetime(\'now\'))');
+  stmt.run(key, value);
+}
+
+export function getAllSettings(): Record<string, string> {
+  const stmt = db.prepare('SELECT key, value FROM settings');
+  const rows = stmt.all() as any[];
+  const result: Record<string, string> = {};
+  for (const row of rows) {
+    result[row.key] = row.value;
+  }
+  return result;
+}
+
+export function getBcSettings(): {
+  tenant: string;
+  environment: string;
+  company: string;
+  mcpConfig: string;
+  authType: string;
+  accessToken: string;
+  enabled: boolean;
+} {
+  return {
+    tenant: getSetting('bc_tenant') || '',
+    environment: getSetting('bc_environment') || '',
+    company: getSetting('bc_company') || '',
+    mcpConfig: getSetting('bc_mcp_config') || '',
+    authType: getSetting('bc_auth_type') || 'none',
+    accessToken: getSetting('bc_access_token') || '',
+    enabled: getSetting('bc_mcp_enabled') === 'true',
+  };
+}

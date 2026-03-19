@@ -4,6 +4,8 @@ import leadsRouter from './routes/leads.js';
 import interactionsRouter from './routes/interactions.js';
 import opportunitiesRouter from './routes/opportunities.js';
 import agentRouter from './routes/agent.js';
+import settingsRouter from './routes/settings.js';
+import bcRouter from './routes/bc.js';
 
 export const app: ReturnType<typeof express> = express();
 
@@ -17,6 +19,8 @@ app.use('/api/leads', leadsRouter);
 app.use('/api/interactions', interactionsRouter);
 app.use('/api/opportunities', opportunitiesRouter);
 app.use('/api/agent', agentRouter);
+app.use('/api/settings', settingsRouter);
+app.use('/api/bc', bcRouter);
 
 // Error handling middleware
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

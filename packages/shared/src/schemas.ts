@@ -130,3 +130,26 @@ export type TelemetryEvent =
   | 'stage_changed'
   | 'interaction_added'
   | 'opportunity_created';
+
+// BC MCP Settings
+export interface BcSettings {
+  tenant: string;
+  environment: string;
+  company: string;
+  mcpConfig: string;
+  authType: string;
+  accessToken: string;
+  hasToken: boolean;
+  enabled: boolean;
+}
+
+export const BcSettingsUpdateSchema = z.object({
+  tenant: z.string().min(1).optional(),
+  environment: z.string().min(1).optional(),
+  company: z.string().min(1).optional(),
+  mcpConfig: z.string().min(1).optional(),
+  authType: z.enum(['none', 'bearer']).optional(),
+  accessToken: z.string().optional(),
+  enabled: z.boolean().optional(),
+});
+export type BcSettingsUpdate = z.infer<typeof BcSettingsUpdateSchema>;
