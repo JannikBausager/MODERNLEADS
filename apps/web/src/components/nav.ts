@@ -3,42 +3,48 @@ import { api } from '../api';
 import { showToast } from './toast';
 
 const NAV_ITEMS = [
-  { hash: '/inbox', icon: '📥', label: 'Inbox' },
   { hash: '/pipeline', icon: '📊', label: 'Pipeline' },
-  { hash: '/today', icon: '⭐', label: 'Today' },
   { hash: '/settings', icon: '⚙️', label: 'Settings' },
 ];
 
 export function renderNav(sidebar: HTMLElement): void {
   sidebar.innerHTML = '';
 
+  // Brand icon
   const brand = document.createElement('div');
-  brand.className = 'nav-brand';
-  brand.innerHTML = '<span class="nav-brand-icon">🚀</span> Lead Copilot';
+  brand.className = 'nav-brand-icon';
+  brand.title = 'Lead Copilot';
+  brand.textContent = '🚀';
   sidebar.appendChild(brand);
 
-  const list = document.createElement('ul');
-  list.className = 'nav-list';
-
+  // Nav links
   const path = currentPath();
   for (const item of NAV_ITEMS) {
-    const li = document.createElement('li');
     const a = document.createElement('a');
     a.href = '#' + item.hash;
-    a.className = 'nav-link' + (path.startsWith(item.hash) ? ' active' : '');
-    a.innerHTML = `<span class="nav-icon">${item.icon}</span> ${item.label}`;
-    li.appendChild(a);
-    list.appendChild(li);
+    const isActive = item.hash === '/pipeline'
+      ? (path === '/' || path.startsWith('/pipeline'))
+      : path.startsWith(item.hash);
+    a.className = 'nav-link' + (isActive ? ' active' : '');
+    a.innerHTML = `<span class="nav-link-icon">${item.icon}</span><span class="nav-link-label">${item.label}</span>`;
+    sidebar.appendChild(a);
   }
-  sidebar.appendChild(list);
 
+  // Spacer
   const spacer = document.createElement('div');
   spacer.className = 'nav-spacer';
   sidebar.appendChild(spacer);
 
+  // Divider
+  const divider = document.createElement('div');
+  divider.className = 'nav-divider';
+  sidebar.appendChild(divider);
+
+  // New Lead button
   const btn = document.createElement('button');
-  btn.className = 'btn btn-primary nav-new-lead';
-  btn.textContent = '+ New Lead';
+  btn.className = 'nav-new-lead';
+  btn.title = '+ New Lead';
+  btn.textContent = '+';
   btn.addEventListener('click', () => showNewLeadModal());
   sidebar.appendChild(btn);
 }

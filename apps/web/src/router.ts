@@ -45,8 +45,8 @@ export function resolve(): void {
     }
   }
 
-  // Default: redirect to inbox
-  navigate('/inbox');
+  // Default: redirect to pipeline
+  navigate('/pipeline');
 }
 
 export function startRouter(): void {

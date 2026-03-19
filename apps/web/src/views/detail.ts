@@ -1,5 +1,4 @@
 import { api, type Lead, type Interaction } from '../api';
-import { renderChatPane } from '../components/chatPane';
 import { showToast } from '../components/toast';
 
 const STAGE_ORDER = ['New', 'Contacted', 'Qualified', 'Disqualified', 'Converted'];
@@ -19,8 +18,7 @@ const INTERACTION_ICONS: Record<string, string> = {
   system: '⚙️',
 };
 
-export function render(container: HTMLElement, params: Record<string, string>): void {
-  const leadId = params.id;
+export function renderDetail(container: HTMLElement, leadId: string): void {
   if (!leadId) return;
 
   container.innerHTML = `
@@ -28,14 +26,10 @@ export function render(container: HTMLElement, params: Record<string, string>): 
       <div class="detail-left" id="detail-left">
         <div class="loading-spinner"></div>
       </div>
-      <div class="detail-right" id="detail-right"></div>
     </div>
   `;
 
   const leftEl = container.querySelector('#detail-left') as HTMLElement;
-  const rightEl = container.querySelector('#detail-right') as HTMLElement;
-
-  renderChatPane(rightEl, leadId);
   loadLead(leftEl, leadId);
 }
 
@@ -45,6 +39,10 @@ async function loadLead(container: HTMLElement, leadId: string) {
       api.leads.get(leadId),
       api.interactions.list(leadId).catch(() => [] as Interaction[]),
     ]);
+
+    // Dispatch lead-selected so copilot panel gets context
+    window.dispatchEvent(new CustomEvent('lead-selected', { detail: { lead } }));
+
     renderLeadContent(container, lead, interactions);
   } catch {
     container.innerHTML = '<div class="empty-state error">Failed to load lead.</div>';
@@ -58,7 +56,7 @@ function renderLeadContent(container: HTMLElement, lead: Lead, interactions: Int
   const updDate = new Date(lead.updatedAt).toLocaleDateString();
 
   container.innerHTML = `
-    <a href="#/inbox" class="back-link">← Back to Inbox</a>
+    <a href="#/pipeline" class="back-link">← Back to Pipeline</a>
     <div class="card lead-detail-card">
       <div class="lead-detail-header">
         <div>
