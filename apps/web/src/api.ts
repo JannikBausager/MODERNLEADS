@@ -73,6 +73,27 @@ export interface BcSettings {
   accessToken?: string;
 }
 
+export interface ScoringSettings {
+  enabled: boolean;
+  weights: Record<string, number>;
+  hotThreshold: number;
+  autoQualifyScore: number;
+}
+
+export interface NotificationSettings {
+  newLead: boolean;
+  stageChange: boolean;
+  goingCold: boolean;
+  dailySummary: boolean;
+}
+
+export interface GeneralSettings {
+  defaultOwner: string;
+  timezone: string;
+  autoAssign: boolean;
+  leadSources: string[];
+}
+
 export const api = {
   leads: {
     list: (params?: { stage?: string; search?: string }) =>
@@ -117,6 +138,15 @@ export const api = {
     updateBc: (data: BcSettings) =>
       request('/settings/bc', { method: 'PUT', body: JSON.stringify(data) }),
     testBc: () => request<{ success: boolean; message: string }>('/settings/bc/test', { method: 'POST' }),
+    getGeneral: () => request<GeneralSettings>('/settings/general'),
+    updateGeneral: (data: Partial<GeneralSettings>) =>
+      request<GeneralSettings>('/settings/general', { method: 'PUT', body: JSON.stringify(data) }),
+    getScoring: () => request<ScoringSettings>('/settings/scoring'),
+    updateScoring: (data: Partial<ScoringSettings>) =>
+      request<ScoringSettings>('/settings/scoring', { method: 'PUT', body: JSON.stringify(data) }),
+    getNotifications: () => request<NotificationSettings>('/settings/notifications'),
+    updateNotifications: (data: Partial<NotificationSettings>) =>
+      request<NotificationSettings>('/settings/notifications', { method: 'PUT', body: JSON.stringify(data) }),
   },
   bc: {
     customers: () => request<any[]>('/bc/customers'),

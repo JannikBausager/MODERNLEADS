@@ -71,8 +71,10 @@ db.exec(`
   );
 `);
 
-// Insert default BC settings
+// Insert default settings
 const insertSetting = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');
+
+// BC MCP connection defaults
 insertSetting.run('bc_tenant', 'DirectionsEmeaWorkshop1.onmicrosoft.com');
 insertSetting.run('bc_environment', 'PRODUCTION');
 insertSetting.run('bc_company', 'CRONUS USA, Inc.');
@@ -80,5 +82,27 @@ insertSetting.run('bc_mcp_config', 'MCPleads');
 insertSetting.run('bc_auth_type', 'none');
 insertSetting.run('bc_access_token', '');
 insertSetting.run('bc_mcp_enabled', 'false');
+
+// App general defaults
+insertSetting.run('app_general_default_owner', '');
+insertSetting.run('app_general_timezone', 'UTC');
+insertSetting.run('app_general_auto_assign', 'false');
+insertSetting.run('app_general_lead_sources', 'email,form,chatbot,manual,linkedin,website,referral');
+
+// Scoring defaults
+insertSetting.run('app_scoring_enabled', 'true');
+insertSetting.run('app_scoring_weight_company_size', '20');
+insertSetting.run('app_scoring_weight_engagement', '25');
+insertSetting.run('app_scoring_weight_intent', '25');
+insertSetting.run('app_scoring_weight_budget', '15');
+insertSetting.run('app_scoring_weight_decision_maker', '15');
+insertSetting.run('app_scoring_hot_threshold', '70');
+insertSetting.run('app_scoring_auto_qualify_score', '85');
+
+// Notification defaults
+insertSetting.run('app_notif_new_lead', 'true');
+insertSetting.run('app_notif_stage_change', 'true');
+insertSetting.run('app_notif_going_cold', 'true');
+insertSetting.run('app_notif_daily_summary', 'false');
 
 export function getDb() { return db; }

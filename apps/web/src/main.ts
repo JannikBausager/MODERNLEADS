@@ -3,7 +3,7 @@ import { renderTopbar } from './components/nav.js';
 import { renderCopilotPanel } from './components/copilotPanel.js';
 import { renderPipeline } from './views/pipeline.js';
 import { renderDetail } from './views/detail.js';
-import { render as renderSettings } from './views/settings.js';
+import { render as renderSettings } from './views/settings/index.js';
 
 function boot() {
   const topbar = document.getElementById('topbar')!;

@@ -1,5 +1,5 @@
-import { api, type BcSettings } from '../api';
-import { showToast } from '../components/toast';
+import { api, type BcSettings } from '../../api.js';
+import { showToast } from '../../components/toast.js';
 
 const DEFAULT_SETTINGS: BcSettings = {
   enabled: false,
@@ -11,14 +11,33 @@ const DEFAULT_SETTINGS: BcSettings = {
   accessToken: '',
 };
 
-export function render(container: HTMLElement): void {
+const OTHER_CRMS = [
+  { id: 'd365_sales', name: 'Dynamics 365 Sales', icon: '🔷', desc: 'Bi-directional sync with Dynamics 365 Sales opportunities.', status: 'coming_soon' as const },
+  { id: 'salesforce', name: 'Salesforce', icon: '☁️', desc: 'Push converted leads to Salesforce as opportunities.', status: 'coming_soon' as const },
+  { id: 'hubspot_crm', name: 'HubSpot CRM', icon: '🟠', desc: 'Sync deals and contacts with HubSpot CRM.', status: 'coming_soon' as const },
+  { id: 'pipedrive', name: 'Pipedrive', icon: '🟢', desc: 'Export qualified leads to Pipedrive deals.', status: 'coming_soon' as const },
+];
+
+export function renderBcConnection(container: HTMLElement): void {
   container.innerHTML = `
-    <div class="view-header">
-      <h1>⚙️ Settings</h1>
-    </div>
-    <div class="settings-layout">
-      <div class="card settings-card">
-        <h2>Business Central MCP Connection</h2>
+    <div class="settings-panel">
+      <div class="settings-panel-header">
+        <h2>Opportunity Management</h2>
+        <p class="settings-panel-desc">Connect your CRM to convert leads into opportunities and sync customer data.</p>
+      </div>
+
+      <div class="card settings-form-card bc-connection-card">
+        <div class="connection-card-header">
+          <div class="connection-card-title">
+            <span class="integration-icon-lg">🏢</span>
+            <div>
+              <h3>Business Central (MCP)</h3>
+              <span class="form-hint">Connect via Model Context Protocol for customers, contracts, and opportunities.</span>
+            </div>
+          </div>
+          <span class="integration-status-badge" id="bc-status-badge">Not Connected</span>
+        </div>
+
         <form id="bc-settings-form">
           <div class="form-group">
             <label class="toggle-label">
@@ -27,32 +46,38 @@ export function render(container: HTMLElement): void {
               Enable BC MCP Integration
             </label>
           </div>
-          <div class="form-group">
-            <label>Tenant</label>
-            <input type="text" class="form-input" id="bc-tenant" />
+          <div class="form-row">
+            <div class="form-group form-group-half">
+              <label>Tenant</label>
+              <input type="text" class="form-input" id="bc-tenant" />
+            </div>
+            <div class="form-group form-group-half">
+              <label>Environment</label>
+              <input type="text" class="form-input" id="bc-environment" />
+            </div>
           </div>
-          <div class="form-group">
-            <label>Environment</label>
-            <input type="text" class="form-input" id="bc-environment" />
+          <div class="form-row">
+            <div class="form-group form-group-half">
+              <label>Company</label>
+              <input type="text" class="form-input" id="bc-company" />
+            </div>
+            <div class="form-group form-group-half">
+              <label>MCP Configuration Name</label>
+              <input type="text" class="form-input" id="bc-mcp-name" />
+            </div>
           </div>
-          <div class="form-group">
-            <label>Company</label>
-            <input type="text" class="form-input" id="bc-company" />
-          </div>
-          <div class="form-group">
-            <label>MCP Configuration Name</label>
-            <input type="text" class="form-input" id="bc-mcp-name" />
-          </div>
-          <div class="form-group">
-            <label>Authentication Type</label>
-            <select class="form-input" id="bc-auth-type">
-              <option value="None">None</option>
-              <option value="bearer">Bearer Token</option>
-            </select>
-          </div>
-          <div class="form-group" id="bc-token-group" style="display:none">
-            <label>Access Token</label>
-            <input type="password" class="form-input" id="bc-token" />
+          <div class="form-row">
+            <div class="form-group form-group-half">
+              <label>Authentication Type</label>
+              <select class="form-input" id="bc-auth-type">
+                <option value="None">None</option>
+                <option value="bearer">Bearer Token</option>
+              </select>
+            </div>
+            <div class="form-group form-group-half" id="bc-token-group" style="display:none">
+              <label>Access Token</label>
+              <input type="password" class="form-input" id="bc-token" />
+            </div>
           </div>
           <div class="settings-actions">
             <button type="submit" class="btn btn-primary">Save Settings</button>
@@ -62,8 +87,8 @@ export function render(container: HTMLElement): void {
         </form>
       </div>
 
-      <div class="card settings-card" id="bc-preview-section" style="display:none">
-        <h2>BC Data Preview</h2>
+      <div class="card settings-form-card" id="bc-preview-section" style="display:none">
+        <h3>Data Preview</h3>
         <div class="preview-tabs" id="preview-tabs">
           <button class="tab tab-active" data-tab="customers">Customers</button>
           <button class="tab" data-tab="contracts">Contracts</button>
@@ -71,6 +96,28 @@ export function render(container: HTMLElement): void {
         <div id="preview-content">
           <div class="loading-spinner"></div>
         </div>
+      </div>
+
+      <div class="integration-section-divider">
+        <span>Other CRM Integrations</span>
+      </div>
+
+      <div class="integration-grid">
+        ${OTHER_CRMS.map(crm => `
+          <div class="integration-card">
+            <div class="integration-card-header">
+              <span class="integration-icon">${crm.icon}</span>
+              <div class="integration-info">
+                <span class="integration-name">${crm.name}</span>
+                <span class="integration-desc">${crm.desc}</span>
+              </div>
+            </div>
+            <div class="integration-card-footer">
+              <span class="integration-status status-coming_soon">Coming Soon</span>
+              <button class="btn btn-sm btn-ghost">Notify Me</button>
+            </div>
+          </div>
+        `).join('')}
       </div>
     </div>
   `;
@@ -88,6 +135,7 @@ export function render(container: HTMLElement): void {
   const previewSection = container.querySelector('#bc-preview-section') as HTMLElement;
   const previewContent = container.querySelector('#preview-content') as HTMLElement;
   const previewTabs = container.querySelector('#preview-tabs') as HTMLElement;
+  const statusBadge = container.querySelector('#bc-status-badge') as HTMLElement;
 
   let activeTab = 'customers';
 
@@ -101,6 +149,8 @@ export function render(container: HTMLElement): void {
     tokenEl.value = s.accessToken || '';
     tokenGroupEl.style.display = s.authType === 'bearer' ? 'block' : 'none';
     previewSection.style.display = s.enabled ? 'block' : 'none';
+    statusBadge.textContent = s.enabled ? 'Enabled' : 'Not Connected';
+    statusBadge.className = `integration-status-badge ${s.enabled ? 'badge-enabled' : 'badge-disabled'}`;
   }
 
   function readForm(): BcSettings {
@@ -121,6 +171,8 @@ export function render(container: HTMLElement): void {
 
   enabledEl.addEventListener('change', () => {
     previewSection.style.display = enabledEl.checked ? 'block' : 'none';
+    statusBadge.textContent = enabledEl.checked ? 'Enabled' : 'Not Connected';
+    statusBadge.className = `integration-status-badge ${enabledEl.checked ? 'badge-enabled' : 'badge-disabled'}`;
     if (enabledEl.checked) loadPreview();
   });
 
@@ -135,7 +187,7 @@ export function render(container: HTMLElement): void {
   });
 
   container.querySelector('#btn-test')!.addEventListener('click', async () => {
-    statusEl.innerHTML = '<span class="status-testing">Testing connection...</span>';
+    statusEl.innerHTML = '<span class="status-testing">Testing connection…</span>';
     try {
       const res = await api.settings.testBc();
       if (res.success) {
@@ -194,6 +246,15 @@ export function render(container: HTMLElement): void {
       `;
     }
   }
+
+  // "Notify Me" for other CRMs
+  container.querySelectorAll('.integration-grid .btn-ghost').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.textContent = '✓ Subscribed';
+      btn.classList.add('btn-subscribed');
+      (btn as HTMLButtonElement).disabled = true;
+    });
+  });
 
   // Load saved settings
   api.settings.getBc()

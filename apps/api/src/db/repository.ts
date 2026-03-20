@@ -229,3 +229,89 @@ export function getBcSettings(): {
     enabled: getSetting('bc_mcp_enabled') === 'true',
   };
 }
+
+// Scoring settings
+const WEIGHT_KEY_MAP: Record<string, string> = {
+  companySize: 'app_scoring_weight_company_size',
+  engagement: 'app_scoring_weight_engagement',
+  intent: 'app_scoring_weight_intent',
+  budget: 'app_scoring_weight_budget',
+  decisionMaker: 'app_scoring_weight_decision_maker',
+};
+
+export function getScoringSettings() {
+  const weights: Record<string, number> = {};
+  for (const [camel, dbKey] of Object.entries(WEIGHT_KEY_MAP)) {
+    weights[camel] = parseInt(getSetting(dbKey) || '0', 10);
+  }
+  return {
+    enabled: getSetting('app_scoring_enabled') === 'true',
+    weights,
+    hotThreshold: parseInt(getSetting('app_scoring_hot_threshold') || '70', 10),
+    autoQualifyScore: parseInt(getSetting('app_scoring_auto_qualify_score') || '85', 10),
+  };
+}
+
+export function setScoringSettings(data: {
+  enabled?: boolean;
+  weights?: Record<string, number>;
+  hotThreshold?: number;
+  autoQualifyScore?: number;
+}) {
+  if (data.enabled !== undefined) setSetting('app_scoring_enabled', String(data.enabled));
+  if (data.weights) {
+    for (const [camel, value] of Object.entries(data.weights)) {
+      const dbKey = WEIGHT_KEY_MAP[camel];
+      if (dbKey) setSetting(dbKey, String(value));
+    }
+  }
+  if (data.hotThreshold !== undefined) setSetting('app_scoring_hot_threshold', String(data.hotThreshold));
+  if (data.autoQualifyScore !== undefined) setSetting('app_scoring_auto_qualify_score', String(data.autoQualifyScore));
+  return getScoringSettings();
+}
+
+// Notification settings
+export function getNotificationSettings() {
+  return {
+    newLead: getSetting('app_notif_new_lead') === 'true',
+    stageChange: getSetting('app_notif_stage_change') === 'true',
+    goingCold: getSetting('app_notif_going_cold') === 'true',
+    dailySummary: getSetting('app_notif_daily_summary') === 'true',
+  };
+}
+
+export function setNotificationSettings(data: Record<string, boolean>) {
+  const keyMap: Record<string, string> = {
+    newLead: 'app_notif_new_lead',
+    stageChange: 'app_notif_stage_change',
+    goingCold: 'app_notif_going_cold',
+    dailySummary: 'app_notif_daily_summary',
+  };
+  for (const [field, dbKey] of Object.entries(keyMap)) {
+    if (data[field] !== undefined) setSetting(dbKey, String(data[field]));
+  }
+  return getNotificationSettings();
+}
+
+// General app settings
+export function getGeneralSettings() {
+  return {
+    defaultOwner: getSetting('app_general_default_owner') || '',
+    timezone: getSetting('app_general_timezone') || 'UTC',
+    autoAssign: getSetting('app_general_auto_assign') === 'true',
+    leadSources: (getSetting('app_general_lead_sources') || '').split(',').filter(Boolean),
+  };
+}
+
+export function setGeneralSettings(data: {
+  defaultOwner?: string;
+  timezone?: string;
+  autoAssign?: boolean;
+  leadSources?: string[];
+}) {
+  if (data.defaultOwner !== undefined) setSetting('app_general_default_owner', data.defaultOwner);
+  if (data.timezone !== undefined) setSetting('app_general_timezone', data.timezone);
+  if (data.autoAssign !== undefined) setSetting('app_general_auto_assign', String(data.autoAssign));
+  if (data.leadSources !== undefined) setSetting('app_general_lead_sources', data.leadSources.join(','));
+  return getGeneralSettings();
+}

@@ -1,6 +1,11 @@
 import { Router, type Router as RouterType } from 'express';
 import { z } from 'zod';
-import { getBcSettings, setSetting } from '../db/repository.js';
+import {
+  getBcSettings, setSetting,
+  getScoringSettings, setScoringSettings,
+  getNotificationSettings, setNotificationSettings,
+  getGeneralSettings, setGeneralSettings,
+} from '../db/repository.js';
 
 const router: RouterType = Router();
 
@@ -83,6 +88,39 @@ router.post('/bc/test', async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+});
+
+// === General Settings ===
+
+router.get('/general', (_req, res) => {
+  res.json(getGeneralSettings());
+});
+
+router.put('/general', (req, res) => {
+  const result = setGeneralSettings(req.body);
+  res.json(result);
+});
+
+// === Scoring Settings ===
+
+router.get('/scoring', (_req, res) => {
+  res.json(getScoringSettings());
+});
+
+router.put('/scoring', (req, res) => {
+  const result = setScoringSettings(req.body);
+  res.json(result);
+});
+
+// === Notification Settings ===
+
+router.get('/notifications', (_req, res) => {
+  res.json(getNotificationSettings());
+});
+
+router.put('/notifications', (req, res) => {
+  const result = setNotificationSettings(req.body);
+  res.json(result);
 });
 
 export default router;
