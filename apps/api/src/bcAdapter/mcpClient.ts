@@ -10,6 +10,9 @@ export interface BcMcpConfig {
   accessToken: string;
 }
 
+// BC MCP server can be slow (cold start, server-side processing)
+const MCP_REQUEST_TIMEOUT = 120_000; // 2 minutes
+
 let mcpClient: Client | null = null;
 let currentConfig: BcMcpConfig | null = null;
 
@@ -60,7 +63,7 @@ export async function getOrCreateClient(config?: BcMcpConfig): Promise<Client> {
 
   mcpClient = new Client(
     { name: 'modernleads-crm', version: '1.0.0' },
-    { capabilities: {} }
+    { capabilities: {}, timeout: MCP_REQUEST_TIMEOUT }
   );
 
   await mcpClient.connect(transport);
@@ -80,13 +83,13 @@ export async function disconnectClient(): Promise<void> {
 
 export async function listMcpTools(): Promise<any[]> {
   const client = await getOrCreateClient();
-  const response = await client.listTools();
+  const response = await client.listTools(undefined, { timeout: MCP_REQUEST_TIMEOUT });
   return response.tools;
 }
 
 export async function callMcpTool(toolName: string, args: Record<string, any>): Promise<any> {
   const client = await getOrCreateClient();
-  const response = await client.callTool({ name: toolName, arguments: args });
+  const response = await client.callTool({ name: toolName, arguments: args }, undefined, { timeout: MCP_REQUEST_TIMEOUT });
   return response;
 }
 
