@@ -4,7 +4,6 @@ import { renderCopilotPanel } from './components/copilotPanel.js';
 import { renderPipeline } from './views/pipeline.js';
 import { renderDetail } from './views/detail.js';
 import { render as renderSettings } from './views/settings/index.js';
-import { renderLinkedInScoring } from './views/linkedinScoring.js';
 
 function boot() {
   const topbar = document.getElementById('topbar')!;
@@ -18,7 +17,6 @@ function boot() {
   addRoute('/pipeline', (el) => renderPipeline(el));
   addRoute('/leads/:id', (el, params) => renderDetail(el, params.id));
   addRoute('/settings', (el) => renderSettings(el));
-  addRoute('/linkedin-scoring', (el) => renderLinkedInScoring(el));
 
   startRouter();
 

@@ -1243,6 +1243,15 @@ body {
   border-left-color: #00564a;
 }
 
+.settings-sidebar-item.sidebar-indent {
+  padding-left: 2.2rem;
+  font-size: .82rem;
+}
+
+.settings-sidebar-item.sidebar-indent .settings-sidebar-icon {
+  font-size: .85rem;
+}
+
 .settings-sidebar-icon {
   font-size: 1rem;
   width: 1.25rem;
@@ -1913,6 +1922,53 @@ tr:hover td {
   border-color: #00564a;
   outline: none;
   box-shadow: 0 0 0 2px rgba(0, 86, 74, .15);
+}
+
+.scoring-rule-slider-group {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-shrink: 0;
+  width: 160px;
+}
+
+.scoring-rule-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 5px;
+  border-radius: 3px;
+  background: #e2e8f0;
+  outline: none;
+}
+
+.scoring-rule-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #00564a;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+
+.scoring-rule-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #00564a;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+
+.scoring-rule-value {
+  font-size: .85rem;
+  font-weight: 700;
+  min-width: 32px;
+  text-align: right;
 }
 
 .scoring-rule-edit,

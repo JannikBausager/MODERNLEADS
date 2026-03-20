@@ -100,10 +100,17 @@ function renderCategories(container: HTMLElement): void {
     });
   });
 
-  area.querySelectorAll('.scoring-rule-score').forEach(input => {
-    input.addEventListener('change', (e) => {
-      const id = (e.target as HTMLInputElement).dataset.ruleId!;
-      const score = parseInt((e.target as HTMLInputElement).value) || 0;
+  area.querySelectorAll('.scoring-rule-slider').forEach(slider => {
+    slider.addEventListener('input', (e) => {
+      const el = e.target as HTMLInputElement;
+      const id = el.dataset.ruleId!;
+      const score = parseInt(el.value) || 0;
+      // Update displayed value
+      const valEl = area.querySelector(`[data-value-for="${id}"]`);
+      if (valEl) {
+        valEl.textContent = (score > 0 ? '+' : '') + score;
+        (valEl as HTMLElement).style.color = score > 0 ? '#16a34a' : score < 0 ? '#dc2626' : '#6b7280';
+      }
       trackChange(id, { score });
     });
   });
@@ -135,6 +142,7 @@ function renderRuleRow(rule: ScoringRule): string {
   const pending = pendingChanges.get(rule.id);
   const enabled = pending?.enabled !== undefined ? pending.enabled : rule.enabled;
   const score = pending?.score !== undefined ? pending.score : rule.score;
+  const scoreColor = score > 0 ? '#16a34a' : score < 0 ? '#dc2626' : '#6b7280';
 
   return `
     <div class="scoring-rule-row">
@@ -146,7 +154,10 @@ function renderRuleRow(rule: ScoringRule): string {
         <span class="scoring-rule-name">${formatSignal(rule.signal)}</span>
         <span class="scoring-rule-desc">${rule.description}</span>
       </div>
-      <input type="number" class="scoring-rule-score" value="${score}" data-rule-id="${rule.id}" />
+      <div class="scoring-rule-slider-group">
+        <input type="range" class="scoring-rule-slider" min="-20" max="25" step="1" value="${score}" data-rule-id="${rule.id}" />
+        <span class="scoring-rule-value" style="color:${scoreColor}" data-value-for="${rule.id}">${score > 0 ? '+' : ''}${score}</span>
+      </div>
       <button class="btn btn-sm btn-ghost scoring-rule-edit" data-rule-id="${rule.id}" title="Edit">✏️</button>
       ${!rule.isDefault ? `<button class="btn btn-sm btn-ghost scoring-rule-delete" data-rule-id="${rule.id}" title="Delete">🗑️</button>` : ''}
     </div>
