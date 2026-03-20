@@ -98,9 +98,17 @@ export async function startDeviceCodeFlow(tenantId: string): Promise<{
           cachedAccount = result.account;
 
           // Auto-store the token
-          setSetting('bc_access_token', result.accessToken);
-          setSetting('bc_auth_type', 'bearer');
+          const token = result.accessToken || '';
+          console.log(`[Auth] Token received: ${token.length} chars, starts with: ${token.substring(0, 20)}...`);
+          if (token) {
+            setSetting('bc_access_token', token);
+            setSetting('bc_auth_type', 'bearer');
+          }
           console.log(`[Auth] Device code flow completed for: ${result.account?.username}`);
+
+          // Verify it was stored
+          const stored = getSetting('bc_access_token');
+          console.log(`[Auth] Stored token length: ${stored?.length ?? 0}`);
         }
       })
       .catch((err) => {
@@ -174,8 +182,10 @@ export function getAuthStatus(): {
   username: string;
 } {
   const token = getSetting('bc_access_token');
+  const hasToken = !!token && token.length > 0;
+  const hasAccount = !!cachedAccount;
   return {
-    signedIn: !!token && token.length > 0,
+    signedIn: hasToken || hasAccount,
     username: cachedAccount?.username || '',
   };
 }

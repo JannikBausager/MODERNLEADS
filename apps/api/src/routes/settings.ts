@@ -66,9 +66,33 @@ router.post('/bc/test', async (req, res, next) => {
       res.json({ success: false, message: 'BC MCP integration is not enabled. Enable it in settings first.' });
       return;
     }
+
+    // If no stored token, try to get one from the auth module
     if (!settings.accessToken) {
-      res.json({ success: false, message: 'No access token configured. Add a bearer token in settings.' });
-      return;
+      try {
+        const { refreshToken, getAuthStatus } = await import('../auth/deviceCodeAuth.js');
+        const authStatus = getAuthStatus();
+        if (authStatus.signedIn) {
+          const newToken = await refreshToken(settings.tenant);
+          if (newToken) {
+            // Token refreshed successfully, re-read settings
+            const updated = getBcSettings();
+            if (!updated.accessToken) {
+              res.json({ success: false, message: 'Signed in but token could not be stored. Try signing in again.' });
+              return;
+            }
+          } else {
+            res.json({ success: false, message: 'Session expired. Please sign in again in the Authentication section.' });
+            return;
+          }
+        } else {
+          res.json({ success: false, message: 'Not authenticated. Click "Sign in with Microsoft" in the Authentication section above.' });
+          return;
+        }
+      } catch {
+        res.json({ success: false, message: 'Not authenticated. Click "Sign in with Microsoft" in the Authentication section above.' });
+        return;
+      }
     }
 
     const { listMcpTools, disconnectClient } = await import('../bcAdapter/mcpClient.js');
