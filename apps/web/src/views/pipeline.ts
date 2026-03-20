@@ -75,6 +75,7 @@ async function loadPipeline(container: HTMLElement) {
       ? oppResponse
       : oppResponse?.data ?? [];
     const oppSource: string = oppResponse?.source ?? 'unknown';
+    const oppMessage: string = oppResponse?.message ?? '';
 
     const grouped: Record<string, Lead[]> = {};
     for (const s of STAGES) grouped[s] = [];
@@ -183,6 +184,7 @@ async function loadPipeline(container: HTMLElement) {
         <span class="pipeline-col-title">Opportunities ${sourceLabel}</span>
         <span class="pipeline-col-count">${bcOpportunities.length}</span>
       </div>
+      ${oppMessage && oppSource !== 'bc' ? `<div class="opp-message">${esc(oppMessage)}</div>` : ''}
       <div class="pipeline-col-body pipeline-col-body-opp"></div>
     `;
 

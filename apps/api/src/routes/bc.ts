@@ -3,16 +3,37 @@ import { getBcSettings } from '../db/repository.js';
 
 const router: RouterType = Router();
 
+/**
+ * Helper: ensure we have a valid BC connection (token + enabled).
+ * Tries to refresh the token silently if one exists in MSAL cache.
+ * Returns null if ready, or a mock-fallback response object if not.
+ */
+async function ensureBcReady(): Promise<string | null> {
+  const settings = getBcSettings();
+  if (!settings.enabled) return 'BC MCP integration is not enabled.';
+
+  // If we have a token, we're good — mcpClient will auto-refresh it
+  if (settings.accessToken) return null;
+
+  // No stored token — try refresh from MSAL cache
+  try {
+    const { refreshToken, getAuthStatus } = await import('../auth/deviceCodeAuth.js');
+    const auth = getAuthStatus();
+    if (auth.signedIn) {
+      const token = await refreshToken(settings.tenant);
+      if (token) return null; // refreshed successfully
+    }
+  } catch { /* ignore */ }
+
+  return 'Not authenticated. Sign in via Settings → Opportunity Management.';
+}
+
 // GET /api/bc/customers — get customers from BC via MCP
 router.get('/customers', async (req, res, next) => {
   try {
-    const settings = getBcSettings();
-    if (!settings.enabled || !settings.accessToken) {
-      res.json({
-        source: 'mock',
-        data: getMockCustomers(),
-        message: 'BC MCP not configured. Showing mock data.',
-      });
+    const notReady = await ensureBcReady();
+    if (notReady) {
+      res.json({ source: 'mock', data: getMockCustomers(), message: notReady + ' Showing mock data.' });
       return;
     }
 
@@ -35,13 +56,9 @@ router.get('/customers', async (req, res, next) => {
 // GET /api/bc/contracts — get contracts from BC via MCP
 router.get('/contracts', async (req, res, next) => {
   try {
-    const settings = getBcSettings();
-    if (!settings.enabled || !settings.accessToken) {
-      res.json({
-        source: 'mock',
-        data: getMockContracts(),
-        message: 'BC MCP not configured. Showing mock data.',
-      });
+    const notReady = await ensureBcReady();
+    if (notReady) {
+      res.json({ source: 'mock', data: getMockContracts(), message: notReady + ' Showing mock data.' });
       return;
     }
 
@@ -91,13 +108,9 @@ function getMockOpportunities() {
 // GET /api/bc/opportunities — get opportunities from BC via MCP
 router.get('/opportunities', async (req, res, next) => {
   try {
-    const settings = getBcSettings();
-    if (!settings.enabled || !settings.accessToken) {
-      res.json({
-        source: 'mock',
-        data: getMockOpportunities(),
-        message: 'BC MCP not configured. Showing mock data.',
-      });
+    const notReady = await ensureBcReady();
+    if (notReady) {
+      res.json({ source: 'mock', data: getMockOpportunities(), message: notReady + ' Showing mock data.' });
       return;
     }
 

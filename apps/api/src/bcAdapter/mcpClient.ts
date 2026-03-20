@@ -1,6 +1,6 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import { getBcSettings } from '../db/repository.js';
+import { getBcSettings, setSetting } from '../db/repository.js';
 
 export interface BcMcpConfig {
   tenant: string;
@@ -24,13 +24,51 @@ function buildMcpUrl(config: BcMcpConfig): string {
   return `https://api.businesscentral.dynamics.com/v2.0/${env}/mcp`;
 }
 
+/**
+ * Ensure we have a fresh access token. If the cached MSAL account exists,
+ * silently refresh. This keeps the MCP connection from failing on expired tokens.
+ */
+async function ensureFreshToken(): Promise<string> {
+  const settings = getBcSettings();
+
+  try {
+    const { refreshToken, getAuthStatus } = await import('../auth/deviceCodeAuth.js');
+    const auth = getAuthStatus();
+    if (auth.signedIn) {
+      const freshToken = await refreshToken(settings.tenant);
+      if (freshToken) {
+        // Token was refreshed — if it changed, force MCP client to reconnect
+        if (freshToken !== settings.accessToken) {
+          console.log('[BC MCP] Token refreshed, will reconnect');
+          if (mcpClient) {
+            try { await mcpClient.close(); } catch { /* ignore */ }
+            mcpClient = null;
+            currentConfig = null;
+          }
+        }
+        return freshToken;
+      }
+    }
+  } catch (err: any) {
+    console.warn('[BC MCP] Token refresh failed:', err.message);
+  }
+
+  // Fall back to stored token
+  if (settings.accessToken) return settings.accessToken;
+  throw new Error('No access token available. Please sign in via Settings → Opportunity Management.');
+}
+
 export async function getOrCreateClient(config?: BcMcpConfig): Promise<Client> {
+  // Always try to refresh the token first
+  const freshToken = await ensureFreshToken();
+
+  const bcSettings = getBcSettings();
   const settings = config || {
-    tenant: getBcSettings().tenant,
-    environment: getBcSettings().environment,
-    company: getBcSettings().company,
-    mcpConfig: getBcSettings().mcpConfig,
-    accessToken: getBcSettings().accessToken,
+    tenant: bcSettings.tenant,
+    environment: bcSettings.environment,
+    company: bcSettings.company,
+    mcpConfig: bcSettings.mcpConfig,
+    accessToken: freshToken,
   };
 
   // If config changed, disconnect old client
