@@ -68,9 +68,10 @@ export interface BcSettings {
   tenant: string;
   environment: string;
   company: string;
-  mcpConfigName: string;
+  mcpConfig: string;
   authType: string;
   accessToken?: string;
+  hasToken?: boolean;
 }
 
 export interface ScoringSettings {
@@ -160,7 +161,7 @@ export const api = {
     getBc: () => request<BcSettings>('/settings/bc'),
     updateBc: (data: BcSettings) =>
       request('/settings/bc', { method: 'PUT', body: JSON.stringify(data) }),
-    testBc: () => request<{ success: boolean; message: string }>('/settings/bc/test', { method: 'POST' }),
+    testBc: () => request<{ success: boolean; message: string; tools?: Array<{ name: string; description: string }> }>('/settings/bc/test', { method: 'POST' }),
     getGeneral: () => request<GeneralSettings>('/settings/general'),
     updateGeneral: (data: Partial<GeneralSettings>) =>
       request<GeneralSettings>('/settings/general', { method: 'PUT', body: JSON.stringify(data) }),

@@ -6,7 +6,7 @@ const DEFAULT_SETTINGS: BcSettings = {
   tenant: 'DirectionsEmeaWorkshop1.onmicrosoft.com',
   environment: 'PRODUCTION',
   company: 'CRONUS USA, Inc.',
-  mcpConfigName: 'MCPleads',
+  mcpConfig: 'MCPleads',
   authType: 'None',
   accessToken: '',
 };
@@ -105,8 +105,16 @@ export function renderBcConnection(container: HTMLElement): void {
             </div>
             <div class="form-group form-group-half">
               <label>MCP Configuration Name</label>
-              <input type="text" class="form-input" id="bc-mcp-name" />
+              <div class="input-with-action">
+                <input type="text" class="form-input" id="bc-mcp-name" placeholder="e.g. MCPleads" />
+                <button type="button" class="btn btn-sm btn-ghost" id="btn-validate-config" title="Validate configuration">✓ Validate</button>
+              </div>
+              <span class="form-hint">Enter the MCP Server Configuration name from Business Central → MCP Server Configuration page.</span>
             </div>
+          </div>
+          <div class="mcp-tools-panel" id="mcp-tools-panel" style="display:none">
+            <h5 class="mcp-tools-title">Available MCP Tools</h5>
+            <div id="mcp-tools-list"></div>
           </div>
           <div class="settings-actions">
             <button type="submit" class="btn btn-primary">Save Settings</button>
@@ -171,13 +179,16 @@ export function renderBcConnection(container: HTMLElement): void {
 
   let activeTab = 'customers';
   let pollTimer: ReturnType<typeof setInterval> | null = null;
+  const toolsPanel = container.querySelector('#mcp-tools-panel') as HTMLElement;
+  const toolsList = container.querySelector('#mcp-tools-list') as HTMLElement;
+  const btnValidate = container.querySelector('#btn-validate-config') as HTMLButtonElement;
 
   function fillForm(s: BcSettings) {
     enabledEl.checked = s.enabled;
     tenantEl.value = s.tenant;
     envEl.value = s.environment;
     companyEl.value = s.company;
-    mcpNameEl.value = s.mcpConfigName;
+    mcpNameEl.value = s.mcpConfig || '';
     previewSection.style.display = s.enabled ? 'block' : 'none';
     statusBadge.textContent = s.enabled ? 'Enabled' : 'Not Connected';
     statusBadge.className = `integration-status-badge ${s.enabled ? 'badge-enabled' : 'badge-disabled'}`;
@@ -189,7 +200,7 @@ export function renderBcConnection(container: HTMLElement): void {
       tenant: tenantEl.value,
       environment: envEl.value,
       company: companyEl.value,
-      mcpConfigName: mcpNameEl.value,
+      mcpConfig: mcpNameEl.value,
       authType: 'bearer',
       accessToken: '',
     };
@@ -287,6 +298,45 @@ export function renderBcConnection(container: HTMLElement): void {
     } catch (err: any) {
       showToast(err.message || 'Sign-out failed', 'error');
     }
+  });
+
+  // Validate MCP Configuration
+  btnValidate.addEventListener('click', async () => {
+    const configName = mcpNameEl.value.trim();
+    if (!configName) {
+      showToast('Enter a configuration name first', 'error');
+      return;
+    }
+
+    btnValidate.disabled = true;
+    btnValidate.textContent = 'Validating…';
+    toolsPanel.style.display = 'block';
+    toolsList.innerHTML = '<span class="form-hint">Connecting to BC MCP server…</span>';
+
+    try {
+      // Save current config first so the backend uses it
+      await api.settings.updateBc(readForm());
+
+      const res = await api.settings.testBc();
+      if (res.success && res.tools?.length) {
+        toolsList.innerHTML = res.tools.map((t: any) => `
+          <div class="mcp-tool-item">
+            <span class="mcp-tool-name">🔧 ${esc(t.name)}</span>
+            <span class="mcp-tool-desc">${esc(t.description || '')}</span>
+          </div>
+        `).join('');
+        showToast(`Configuration "${configName}" is valid — ${res.tools.length} tools available`, 'success');
+      } else if (res.success) {
+        toolsList.innerHTML = `<span class="status-success">✅ Connected but no tools found. Check the configuration in BC.</span>`;
+      } else {
+        toolsList.innerHTML = `<span class="status-error">❌ ${esc(res.message)}</span>`;
+      }
+    } catch (err: any) {
+      toolsList.innerHTML = `<span class="status-error">❌ ${esc(err.message || 'Validation failed')}</span>`;
+    }
+
+    btnValidate.disabled = false;
+    btnValidate.textContent = '✓ Validate';
   });
 
   enabledEl.addEventListener('change', () => {
