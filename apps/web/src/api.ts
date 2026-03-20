@@ -177,7 +177,7 @@ export const api = {
   },
   bc: {
     customers: () => request<any[]>('/bc/customers'),
-    contracts: () => request<any[]>('/bc/contracts'),
+    contacts: () => request<any[]>('/bc/contacts'),
     opportunities: () => request<any[]>('/bc/opportunities'),
   },
   auth: {

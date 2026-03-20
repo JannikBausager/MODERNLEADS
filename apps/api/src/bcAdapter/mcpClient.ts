@@ -191,6 +191,7 @@ export function clearToolCache(): void {
 export async function getBcCustomers(): Promise<any[]> {
   try {
     const toolName = await resolveToolName('customers', [
+      'Customers_ListCustomers_PAG1577',
       'getCustomers', 'get_customers', 'listCustomers', 'list_customers', 'customers',
     ]);
     const result = await callMcpTool(toolName, {});
@@ -202,16 +203,17 @@ export async function getBcCustomers(): Promise<any[]> {
   }
 }
 
-export async function getBcContracts(): Promise<any[]> {
+export async function getBcContacts(): Promise<any[]> {
   try {
-    const toolName = await resolveToolName('contracts', [
-      'getContracts', 'get_contracts', 'listContracts', 'list_contracts', 'contracts',
+    const toolName = await resolveToolName('contacts', [
+      'Customers_ListContacts_PAG1576',
+      'getContacts', 'get_contacts', 'listContacts', 'list_contacts', 'contacts',
     ]);
     const result = await callMcpTool(toolName, {});
     const data = parseMcpResult(result);
     return Array.isArray(data) ? data : [];
   } catch (err: any) {
-    console.error('[BC MCP] Error getting contracts:', err.message);
+    console.error('[BC MCP] Error getting contacts:', err.message);
     throw new Error(`BC MCP error: ${err.message}`);
   }
 }
@@ -219,6 +221,7 @@ export async function getBcContracts(): Promise<any[]> {
 export async function getBcOpportunities(): Promise<any[]> {
   try {
     const toolName = await resolveToolName('opportunities', [
+      'ListOpportunities_PAG30070',
       'getOpportunities', 'get_opportunities', 'listOpportunities', 'list_opportunities', 'opportunities',
     ]);
     const result = await callMcpTool(toolName, {});

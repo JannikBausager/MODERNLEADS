@@ -128,7 +128,8 @@ export function renderBcConnection(container: HTMLElement): void {
         <h3>Data Preview</h3>
         <div class="preview-tabs" id="preview-tabs">
           <button class="tab tab-active" data-tab="customers">Customers</button>
-          <button class="tab" data-tab="contracts">Contracts</button>
+          <button class="tab" data-tab="contacts">Contacts</button>
+          <button class="tab" data-tab="opportunities">Opportunities</button>
         </div>
         <div id="preview-content">
           <div class="loading-spinner"></div>
@@ -382,38 +383,50 @@ export function renderBcConnection(container: HTMLElement): void {
   async function loadPreview() {
     previewContent.innerHTML = '<div class="loading-spinner"></div>';
     try {
-      const data = activeTab === 'customers'
-        ? await api.bc.customers()
-        : await api.bc.contracts();
+      let response: any;
+      if (activeTab === 'customers') {
+        response = await api.bc.customers();
+      } else if (activeTab === 'contacts') {
+        response = await api.bc.contacts();
+      } else {
+        response = await api.bc.opportunities();
+      }
+
+      // Response may be { source, data, message } or a raw array
+      const data = Array.isArray(response) ? response : response?.data ?? [];
+      const source = response?.source ?? 'unknown';
+      const message = response?.message ?? '';
 
       if (!data || data.length === 0) {
         previewContent.innerHTML = '<div class="empty-state">No data available.</div>';
         return;
       }
 
+      const sourceBadge = source === 'bc'
+        ? '<span class="opp-source-badge opp-source-live" style="margin-left:.5rem">● BC Live</span>'
+        : '<span class="opp-source-badge opp-source-mock" style="margin-left:.5rem">Mock</span>';
+
       const keys = Object.keys(data[0]);
-      const table = document.createElement('table');
-      table.className = 'data-table';
+      const table = document.createElement('div');
       table.innerHTML = `
+        ${message ? `<div class="opp-message">${esc(message)}</div>` : ''}
+        <div style="font-size:.75rem;color:#64748b;margin-bottom:.5rem">
+          Showing ${data.length} records ${sourceBadge}
+        </div>
+      `;
+      const tbl = document.createElement('table');
+      tbl.className = 'data-table';
+      tbl.innerHTML = `
         <thead><tr>${keys.map(k => `<th>${esc(k)}</th>`).join('')}</tr></thead>
-        <tbody>${data.slice(0, 50).map((row: any) =>
+        <tbody>${data.slice(0, 20).map((row: any) =>
           `<tr>${keys.map(k => `<td>${esc(String(row[k] ?? ''))}</td>`).join('')}</tr>`
         ).join('')}</tbody>
       `;
+      table.appendChild(tbl);
       previewContent.innerHTML = '';
       previewContent.appendChild(table);
-    } catch {
-      previewContent.innerHTML = `
-        <div class="warning-banner">⚠️ Could not load BC data. Showing mock data.</div>
-        <table class="data-table">
-          <thead><tr><th>Name</th><th>ID</th><th>Status</th></tr></thead>
-          <tbody>
-            <tr><td>CRONUS Sample Co.</td><td>C001</td><td>Active</td></tr>
-            <tr><td>Fabrikam Inc.</td><td>C002</td><td>Active</td></tr>
-            <tr><td>Contoso Ltd.</td><td>C003</td><td>Inactive</td></tr>
-          </tbody>
-        </table>
-      `;
+    } catch (err: any) {
+      previewContent.innerHTML = `<div class="warning-banner">⚠️ ${esc(err.message || 'Could not load data.')}</div>`;
     }
   }
 

@@ -53,23 +53,23 @@ router.get('/customers', async (req, res, next) => {
   }
 });
 
-// GET /api/bc/contracts — get contracts from BC via MCP
-router.get('/contracts', async (req, res, next) => {
+// GET /api/bc/contacts — get contacts from BC via MCP
+router.get('/contacts', async (req, res, next) => {
   try {
     const notReady = await ensureBcReady();
     if (notReady) {
-      res.json({ source: 'mock', data: getMockContracts(), message: notReady + ' Showing mock data.' });
+      res.json({ source: 'mock', data: getMockContacts(), message: notReady + ' Showing mock data.' });
       return;
     }
 
     try {
-      const { getBcContracts } = await import('../bcAdapter/mcpClient.js');
-      const contracts = await getBcContracts();
-      res.json({ source: 'bc', data: contracts });
+      const { getBcContacts } = await import('../bcAdapter/mcpClient.js');
+      const contacts = await getBcContacts();
+      res.json({ source: 'bc', data: contacts });
     } catch (err: any) {
       res.json({
         source: 'mock',
-        data: getMockContracts(),
+        data: getMockContacts(),
         message: `BC MCP error: ${err.message}. Showing mock data.`,
       });
     }
@@ -89,11 +89,13 @@ function getMockCustomers() {
   ];
 }
 
-function getMockContracts() {
+function getMockContacts() {
   return [
-    { no: 'SC1000', description: 'Annual Maintenance', customerNo: 'C10000', customerName: 'Adatum Corporation', status: 'Active', amount: 12000 },
-    { no: 'SC2000', description: 'Premium Support', customerNo: 'C20000', customerName: 'Trey Research', status: 'Active', amount: 24000 },
-    { no: 'SC3000', description: 'Basic Support', customerNo: 'C30000', customerName: 'School of Fine Art', status: 'Expired', amount: 6000 },
+    { no: 'CT10000', name: 'John Smith', companyName: 'Adatum Corporation', email: 'john@adatum.com', phone: '555-0100', type: 'Person' },
+    { no: 'CT20000', name: 'Sarah Chen', companyName: 'Trey Research', email: 'sarah@treyresearch.net', phone: '555-0200', type: 'Person' },
+    { no: 'CT30000', name: 'Mike Johnson', companyName: 'School of Fine Art', email: 'mike@sfa.edu', phone: '555-0300', type: 'Person' },
+    { no: 'CT40000', name: 'Adatum Corporation', companyName: '', email: 'info@adatum.com', phone: '555-1000', type: 'Company' },
+    { no: 'CT50000', name: 'Trey Research', companyName: '', email: 'info@treyresearch.net', phone: '555-2000', type: 'Company' },
   ];
 }
 
