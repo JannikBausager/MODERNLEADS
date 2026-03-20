@@ -1,16 +1,16 @@
-import { addRoute, startRouter, navigate } from './router.js';
-import { renderNav } from './components/nav.js';
+import { addRoute, startRouter } from './router.js';
+import { renderTopbar } from './components/nav.js';
 import { renderCopilotPanel } from './components/copilotPanel.js';
 import { renderPipeline } from './views/pipeline.js';
 import { renderDetail } from './views/detail.js';
 import { render as renderSettings } from './views/settings.js';
 
 function boot() {
-  const sidebar = document.getElementById('sidebar')!;
+  const topbar = document.getElementById('topbar')!;
   const content = document.getElementById('content')!;
   const copilotPanel = document.getElementById('copilot-panel')!;
 
-  renderNav(sidebar);
+  renderTopbar(topbar);
   renderCopilotPanel(copilotPanel);
 
   addRoute('/', (el) => renderPipeline(el));
@@ -20,9 +20,8 @@ function boot() {
 
   startRouter();
 
-  // Update nav active state on route change
   window.addEventListener('hashchange', () => {
-    renderNav(sidebar);
+    renderTopbar(topbar);
   });
 }
 

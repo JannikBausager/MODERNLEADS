@@ -2,51 +2,29 @@ import { navigate, currentPath } from '../router';
 import { api } from '../api';
 import { showToast } from './toast';
 
-const NAV_ITEMS = [
-  { hash: '/pipeline', icon: '📊', label: 'Pipeline' },
-  { hash: '/settings', icon: '⚙️', label: 'Settings' },
-];
-
-export function renderNav(sidebar: HTMLElement): void {
-  sidebar.innerHTML = '';
-
-  // Brand icon
-  const brand = document.createElement('div');
-  brand.className = 'nav-brand-icon';
-  brand.title = 'Lead Agent';
-  brand.textContent = '🚀';
-  sidebar.appendChild(brand);
-
-  // Nav links
+export function renderTopbar(container: HTMLElement): void {
   const path = currentPath();
-  for (const item of NAV_ITEMS) {
-    const a = document.createElement('a');
-    a.href = '#' + item.hash;
-    const isActive = item.hash === '/pipeline'
-      ? (path === '/' || path.startsWith('/pipeline'))
-      : path.startsWith(item.hash);
-    a.className = 'nav-link' + (isActive ? ' active' : '');
-    a.innerHTML = `<span class="nav-link-icon">${item.icon}</span><span class="nav-link-label">${item.label}</span>`;
-    sidebar.appendChild(a);
-  }
+  const isPipeline = path === '/' || path.startsWith('/pipeline') || path.startsWith('/leads/');
+  const isSettings = path.startsWith('/settings');
 
-  // Spacer
-  const spacer = document.createElement('div');
-  spacer.className = 'nav-spacer';
-  sidebar.appendChild(spacer);
+  container.innerHTML = `
+    <div class="topbar">
+      <div class="topbar-left">
+        <span class="topbar-brand">Lead Agent</span>
+        <nav class="topbar-nav">
+          <a href="#/pipeline" class="topbar-link ${isPipeline ? 'active' : ''}">Pipeline</a>
+          <a href="#/settings" class="topbar-link ${isSettings ? 'active' : ''}">Settings</a>
+        </nav>
+      </div>
+      <div class="topbar-right">
+        <button class="topbar-new-lead" id="topbar-new-lead">+ New Lead</button>
+        <span class="topbar-company">CRONUS USA, Inc.</span>
+        <span class="topbar-avatar">JB</span>
+      </div>
+    </div>
+  `;
 
-  // Divider
-  const divider = document.createElement('div');
-  divider.className = 'nav-divider';
-  sidebar.appendChild(divider);
-
-  // New Lead button
-  const btn = document.createElement('button');
-  btn.className = 'nav-new-lead';
-  btn.title = '+ New Lead';
-  btn.textContent = '+';
-  btn.addEventListener('click', () => showNewLeadModal());
-  sidebar.appendChild(btn);
+  container.querySelector('#topbar-new-lead')?.addEventListener('click', () => showNewLeadModal());
 }
 
 function showNewLeadModal(): void {

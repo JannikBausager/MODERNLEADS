@@ -38,12 +38,20 @@ function scoreClass(score: number): string {
   return 'score-low';
 }
 
+function getGreetingTime(): string {
+  const h = new Date().getHours();
+  if (h < 12) return 'morning';
+  if (h < 17) return 'afternoon';
+  return 'evening';
+}
+
 export function renderPipeline(container: HTMLElement): void {
   container.innerHTML = `
-    <div class="pipeline-header">
-      <h1>Pipeline</h1>
-      <div class="pipeline-stats" id="pipeline-stats"></div>
+    <div class="pipeline-greeting">
+      <h1>Good ${getGreetingTime()}, welcome back.</h1>
+      <p class="pipeline-subtitle">Loading pipeline...</p>
     </div>
+    <div class="pipeline-stats-bar" id="pipeline-stats"></div>
     <div class="pipeline-board" id="pipeline-board">
       <div class="loading-spinner"></div>
     </div>
@@ -65,7 +73,15 @@ async function loadPipeline(container: HTMLElement) {
     }
 
     // Stats
+    const newCount = grouped['New'].length;
+    const qualifiedCount = grouped['Qualified'].length;
     const totalValue = leads.reduce((sum, l) => sum + (l.score ?? 0), 0);
+
+    const subtitleEl = container.querySelector('.pipeline-subtitle');
+    if (subtitleEl) {
+      subtitleEl.innerHTML = `You have <strong>${newCount}</strong> new leads and <strong>${qualifiedCount}</strong> qualified leads ready for action.`;
+    }
+
     statsEl.innerHTML = `
       <span class="stat"><strong>${leads.length}</strong> leads</span>
       <span class="stat"><strong>${totalValue}</strong> pipeline score</span>
