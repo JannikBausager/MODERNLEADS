@@ -6,6 +6,7 @@ import opportunitiesRouter from './routes/opportunities.js';
 import agentRouter from './routes/agent.js';
 import settingsRouter from './routes/settings.js';
 import bcRouter from './routes/bc.js';
+import authRouter from './routes/auth.js';
 
 export const app: ReturnType<typeof express> = express();
 
@@ -21,6 +22,7 @@ app.use('/api/opportunities', opportunitiesRouter);
 app.use('/api/agent', agentRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/bc', bcRouter);
+app.use('/api/auth', authRouter);
 
 // Error handling middleware
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

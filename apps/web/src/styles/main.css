@@ -443,6 +443,81 @@ body {
   border-color: #9ca3af;
 }
 
+/* === Device Code Flow === */
+.device-code-box {
+  background: #f8f9fa;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin: .75rem 0;
+}
+
+.device-code-instruction {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-bottom: .6rem;
+  font-size: .875rem;
+  color: #374151;
+}
+
+.device-code-step {
+  width: 1.5rem;
+  height: 1.5rem;
+  background: #00564a;
+  color: #fff;
+  border-radius: 50%;
+  font-size: .72rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.device-code-url {
+  color: #00564a;
+  font-weight: 500;
+}
+
+.device-code-value {
+  display: inline-block;
+  background: #fff;
+  border: 2px solid #00564a;
+  padding: .35rem .75rem;
+  border-radius: 6px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  font-family: 'Consolas', 'Courier New', monospace;
+  letter-spacing: .15em;
+  color: #00564a;
+  user-select: all;
+}
+
+.device-code-polling {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-top: .75rem;
+  padding-top: .75rem;
+  border-top: 1px solid #e5e7eb;
+  font-size: .85rem;
+  color: #6b7280;
+}
+
+.loading-dot {
+  width: 8px;
+  height: 8px;
+  background: #00564a;
+  border-radius: 50%;
+  animation: pulse-dot 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: .3; transform: scale(.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
 /* === Cards (BC style) === */
 .card {
   background: #fff;

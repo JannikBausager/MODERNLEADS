@@ -1,13 +1,5 @@
 import { api, type BcSettings } from '../../api.js';
 import { showToast } from '../../components/toast.js';
-import {
-  initializeMsal,
-  signIn as msalSignIn,
-  signOut as msalSignOut,
-  isSignedIn,
-  getAccount,
-  acquireAndStoreToken,
-} from '../../auth/msalAuth.js';
 
 const DEFAULT_SETTINGS: BcSettings = {
   enabled: false,
@@ -46,37 +38,42 @@ export function renderBcConnection(container: HTMLElement): void {
           <span class="integration-status-badge" id="bc-status-badge">Not Connected</span>
         </div>
 
-        <!-- Entra ID Authentication -->
+        <!-- Authentication (Device Code — no app registration needed) -->
         <div class="auth-section" id="auth-section">
-          <h4 class="auth-section-title">🔐 Authentication (Microsoft Entra ID)</h4>
+          <h4 class="auth-section-title">🔐 Authentication</h4>
           <p class="form-hint" style="margin-bottom:.75rem">
-            Register an app in <a href="https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps" target="_blank">Azure Portal → App registrations</a>.
-            Add a <strong>SPA redirect URI</strong> (<code>http://localhost:5173</code>) and grant <strong>Dynamics 365 Business Central → user_impersonation</strong> API permission.
+            Sign in with your Microsoft account to connect to Business Central.
+            <strong>No app registration required</strong> — we use the device code flow so you just sign in with your browser.
           </p>
-          <div class="form-row">
-            <div class="form-group form-group-half">
-              <label>Application (Client) ID</label>
-              <input type="text" class="form-input" id="entra-client-id" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+          <div class="auth-status" id="auth-status">
+            <span class="form-hint">Checking auth status…</span>
+          </div>
+          <div class="device-code-box" id="device-code-box" style="display:none">
+            <div class="device-code-instruction">
+              <span class="device-code-step">1.</span>
+              Open <a id="device-code-link" href="https://microsoft.com/devicelogin" target="_blank" class="device-code-url">https://microsoft.com/devicelogin</a>
             </div>
-            <div class="form-group form-group-half">
-              <label>Directory (Tenant) ID</label>
-              <input type="text" class="form-input" id="entra-tenant-id" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+            <div class="device-code-instruction">
+              <span class="device-code-step">2.</span>
+              Enter this code:
+              <span class="device-code-value" id="device-code-value"></span>
+              <button class="btn btn-sm btn-ghost" id="btn-copy-code" title="Copy code">📋</button>
+            </div>
+            <div class="device-code-instruction">
+              <span class="device-code-step">3.</span>
+              Sign in with your Business Central account and approve access.
+            </div>
+            <div class="device-code-polling" id="device-code-polling">
+              <span class="loading-dot"></span> Waiting for you to complete sign-in…
             </div>
           </div>
-          <div class="form-group">
-            <label>Redirect URI</label>
-            <input type="text" class="form-input" id="entra-redirect-uri" placeholder="http://localhost:5173" />
-            <span class="form-hint">Must match exactly what is configured in your Azure App Registration (SPA)</span>
-          </div>
-          <div class="settings-actions" style="border-top:none;padding-top:0">
-            <button type="button" class="btn btn-primary btn-microsoft" id="btn-entra-signin">
+          <div class="settings-actions" style="border-top:none;padding-top:.5rem">
+            <button type="button" class="btn btn-primary btn-microsoft" id="btn-signin">
               <svg width="16" height="16" viewBox="0 0 21 21" fill="none" style="margin-right:6px;vertical-align:middle"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
               Sign in with Microsoft
             </button>
-            <button type="button" class="btn btn-secondary" id="btn-entra-signout" style="display:none">Sign Out</button>
-            <button type="button" class="btn btn-secondary" id="btn-save-entra">Save Entra Config</button>
+            <button type="button" class="btn btn-secondary" id="btn-signout" style="display:none">Sign Out</button>
           </div>
-          <div class="auth-status" id="auth-status"></div>
         </div>
 
         <hr class="section-divider" />
@@ -166,11 +163,14 @@ export function renderBcConnection(container: HTMLElement): void {
   const previewTabs = container.querySelector('#preview-tabs') as HTMLElement;
   const statusBadge = container.querySelector('#bc-status-badge') as HTMLElement;
   const authStatusEl = container.querySelector('#auth-status') as HTMLElement;
-  const btnSignIn = container.querySelector('#btn-entra-signin') as HTMLButtonElement;
-  const btnSignOut = container.querySelector('#btn-entra-signout') as HTMLButtonElement;
-  const btnSaveEntra = container.querySelector('#btn-save-entra') as HTMLButtonElement;
+  const deviceCodeBox = container.querySelector('#device-code-box') as HTMLElement;
+  const deviceCodeValue = container.querySelector('#device-code-value') as HTMLElement;
+  const deviceCodePolling = container.querySelector('#device-code-polling') as HTMLElement;
+  const btnSignIn = container.querySelector('#btn-signin') as HTMLButtonElement;
+  const btnSignOut = container.querySelector('#btn-signout') as HTMLButtonElement;
 
   let activeTab = 'customers';
+  let pollTimer: ReturnType<typeof setInterval> | null = null;
 
   function fillForm(s: BcSettings) {
     enabledEl.checked = s.enabled;
@@ -195,67 +195,94 @@ export function renderBcConnection(container: HTMLElement): void {
     };
   }
 
-  function updateAuthUI() {
-    const signedIn = isSignedIn();
-    const account = getAccount();
+  function showAuthStatus(signedIn: boolean, username?: string) {
     btnSignIn.style.display = signedIn ? 'none' : '';
     btnSignOut.style.display = signedIn ? '' : 'none';
-    if (signedIn && account) {
-      authStatusEl.innerHTML = `<span class="status-success">✅ Signed in as <strong>${esc(account.username)}</strong></span>`;
+    deviceCodeBox.style.display = 'none';
+    if (signedIn && username) {
+      authStatusEl.innerHTML = `<span class="status-success">✅ Signed in as <strong>${esc(username)}</strong></span>`;
+    } else if (signedIn) {
+      authStatusEl.innerHTML = '<span class="status-success">✅ Authenticated (token stored)</span>';
     } else {
       authStatusEl.innerHTML = '<span class="form-hint">Not signed in. Click "Sign in with Microsoft" to authenticate.</span>';
     }
   }
 
-  // Entra ID: save config
-  btnSaveEntra.addEventListener('click', async () => {
-    try {
-      await api.settings.updateEntra({
-        clientId: (container.querySelector('#entra-client-id') as HTMLInputElement).value.trim(),
-        tenantId: (container.querySelector('#entra-tenant-id') as HTMLInputElement).value.trim(),
-        redirectUri: (container.querySelector('#entra-redirect-uri') as HTMLInputElement).value.trim(),
-      });
-      showToast('Entra ID configuration saved!', 'success');
-    } catch (err: any) {
-      showToast(err.message || 'Failed to save', 'error');
+  function stopPolling() {
+    if (pollTimer) {
+      clearInterval(pollTimer);
+      pollTimer = null;
     }
-  });
+  }
 
-  // Entra ID: sign in
+  // Sign in: start device code flow
   btnSignIn.addEventListener('click', async () => {
-    const clientId = (container.querySelector('#entra-client-id') as HTMLInputElement).value.trim();
-    const tenantId = (container.querySelector('#entra-tenant-id') as HTMLInputElement).value.trim();
-    const redirectUri = (container.querySelector('#entra-redirect-uri') as HTMLInputElement).value.trim();
-
-    if (!clientId || !tenantId) {
-      showToast('Please enter Client ID and Tenant ID first', 'error');
-      return;
-    }
-
     try {
-      authStatusEl.innerHTML = '<span class="status-testing">Initializing…</span>';
-      await initializeMsal({ clientId, tenantId, redirectUri: redirectUri || window.location.origin });
-      await msalSignIn();
-      updateAuthUI();
+      btnSignIn.disabled = true;
+      btnSignIn.textContent = 'Starting…';
+      authStatusEl.innerHTML = '<span class="status-testing">Requesting device code…</span>';
 
-      // Acquire token and push to backend
-      await acquireAndStoreToken(async (data) => {
-        await api.settings.updateBc({ ...readForm(), authType: data.authType, accessToken: data.accessToken });
+      const res = await api.auth.startDeviceCode();
+
+      // Show device code UI
+      deviceCodeBox.style.display = 'block';
+      deviceCodeValue.textContent = res.userCode;
+      deviceCodePolling.innerHTML = '<span class="loading-dot"></span> Waiting for you to complete sign-in…';
+      (container.querySelector('#device-code-link') as HTMLAnchorElement).href = res.verificationUri;
+      (container.querySelector('#device-code-link') as HTMLAnchorElement).textContent = res.verificationUri;
+      authStatusEl.innerHTML = '';
+
+      // Copy code button
+      container.querySelector('#btn-copy-code')?.addEventListener('click', () => {
+        navigator.clipboard.writeText(res.userCode);
+        showToast('Code copied to clipboard!', 'success');
       });
-      showToast('Authenticated! Token sent to backend.', 'success');
+
+      // Reset button
+      btnSignIn.style.display = 'none';
+
+      // Start polling for completion
+      stopPolling();
+      pollTimer = setInterval(async () => {
+        try {
+          const poll = await api.auth.pollDeviceCode();
+          if (poll.status === 'completed') {
+            stopPolling();
+            showAuthStatus(true, poll.username);
+            showToast(`Signed in as ${poll.username}!`, 'success');
+          } else if (poll.status === 'error') {
+            stopPolling();
+            deviceCodePolling.innerHTML = `<span class="status-error">❌ ${esc(poll.error || 'Authentication failed')}</span>`;
+            btnSignIn.style.display = '';
+            btnSignIn.disabled = false;
+            btnSignIn.innerHTML = `<svg width="16" height="16" viewBox="0 0 21 21" fill="none" style="margin-right:6px;vertical-align:middle"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg> Retry Sign in`;
+          } else if (poll.status === 'expired') {
+            stopPolling();
+            deviceCodePolling.innerHTML = '<span class="status-error">Code expired. Please try again.</span>';
+            btnSignIn.style.display = '';
+            btnSignIn.disabled = false;
+            btnSignIn.innerHTML = `<svg width="16" height="16" viewBox="0 0 21 21" fill="none" style="margin-right:6px;vertical-align:middle"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg> Retry Sign in`;
+          }
+          // 'pending' — keep polling
+        } catch {
+          // Network error — keep trying
+        }
+      }, 2000);
+
     } catch (err: any) {
-      authStatusEl.innerHTML = `<span class="status-error">❌ ${esc(err.message || 'Sign-in failed')}</span>`;
+      authStatusEl.innerHTML = `<span class="status-error">❌ ${esc(err.message || 'Failed to start sign-in')}</span>`;
       showToast(err.message || 'Sign-in failed', 'error');
+      btnSignIn.disabled = false;
+      btnSignIn.innerHTML = `<svg width="16" height="16" viewBox="0 0 21 21" fill="none" style="margin-right:6px;vertical-align:middle"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg> Sign in with Microsoft`;
     }
   });
 
-  // Entra ID: sign out
+  // Sign out
   btnSignOut.addEventListener('click', async () => {
     try {
-      await msalSignOut();
-      // Clear token on backend
-      await api.settings.updateBc({ ...readForm(), authType: 'none', accessToken: '' });
-      updateAuthUI();
+      stopPolling();
+      await api.auth.signOut();
+      showAuthStatus(false);
       showToast('Signed out', 'success');
     } catch (err: any) {
       showToast(err.message || 'Sign-out failed', 'error');
@@ -357,20 +384,10 @@ export function renderBcConnection(container: HTMLElement): void {
     })
     .catch(() => fillForm(DEFAULT_SETTINGS));
 
-  // Load Entra settings
-  api.settings.getEntra()
-    .then(s => {
-      (container.querySelector('#entra-client-id') as HTMLInputElement).value = s.clientId || '';
-      (container.querySelector('#entra-tenant-id') as HTMLInputElement).value = s.tenantId || '';
-      (container.querySelector('#entra-redirect-uri') as HTMLInputElement).value = s.redirectUri || 'http://localhost:5173';
-      // If we have client/tenant configured, try to re-init MSAL to check session
-      if (s.clientId && s.tenantId) {
-        initializeMsal(s).then(() => updateAuthUI()).catch(() => {});
-      } else {
-        updateAuthUI();
-      }
-    })
-    .catch(() => updateAuthUI());
+  // Check auth status
+  api.auth.status()
+    .then(s => showAuthStatus(s.signedIn, s.username))
+    .catch(() => showAuthStatus(false));
 }
 
 function esc(s: string): string {

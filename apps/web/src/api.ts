@@ -100,6 +100,23 @@ export interface EntraSettings {
   redirectUri: string;
 }
 
+export interface DeviceCodeResponse {
+  userCode: string;
+  verificationUri: string;
+  message: string;
+}
+
+export interface AuthStatus {
+  signedIn: boolean;
+  username: string;
+}
+
+export interface DeviceCodePollResponse {
+  status: 'pending' | 'completed' | 'error' | 'expired' | 'none';
+  username?: string;
+  error?: string;
+}
+
 export const api = {
   leads: {
     list: (params?: { stage?: string; search?: string }) =>
@@ -161,5 +178,13 @@ export const api = {
     customers: () => request<any[]>('/bc/customers'),
     contracts: () => request<any[]>('/bc/contracts'),
     opportunities: () => request<any[]>('/bc/opportunities'),
+  },
+  auth: {
+    startDeviceCode: () =>
+      request<DeviceCodeResponse>('/auth/device-code', { method: 'POST' }),
+    pollDeviceCode: () =>
+      request<DeviceCodePollResponse>('/auth/device-code/poll'),
+    status: () => request<AuthStatus>('/auth/status'),
+    signOut: () => request('/auth/signout', { method: 'POST' }),
   },
 };
