@@ -1,4 +1,4 @@
-# Lead Copilot (MODERNLEADS) — Lead Management MVP
+# Lead Agent (MODERNLEADS) — Lead Management MVP
 
 A chat-first lead management system for SMBs with Business Central integration.
 

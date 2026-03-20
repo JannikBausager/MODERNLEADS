@@ -1,4 +1,4 @@
-# Lead Copilot (BC Leads) — Claude Code Instructions
+# Lead Agent (BC Leads) — Claude Code Instructions
 
 ## Goal
 Build an MVP lead management system for SMBs:

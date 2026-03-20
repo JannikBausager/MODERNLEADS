@@ -13,7 +13,7 @@ export function renderNav(sidebar: HTMLElement): void {
   // Brand icon
   const brand = document.createElement('div');
   brand.className = 'nav-brand-icon';
-  brand.title = 'Lead Copilot';
+  brand.title = 'Lead Agent';
   brand.textContent = '🚀';
   sidebar.appendChild(brand);
 

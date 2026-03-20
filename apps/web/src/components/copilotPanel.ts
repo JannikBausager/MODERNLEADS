@@ -53,14 +53,14 @@ export function renderCopilotPanel(container: HTMLElement): void {
   container.innerHTML = `
     <div class="copilot-panel">
       <div class="copilot-header">
-        <span class="copilot-title">🤖 Lead Copilot</span>
+        <span class="copilot-title">🤖 Lead Agent</span>
         <button class="copilot-toggle" title="Toggle panel">◀</button>
       </div>
       <div class="copilot-body">
         <div class="copilot-context" id="copilot-context" style="display:none"></div>
         <div class="copilot-messages" id="copilot-messages">
           <div class="message message-agent">
-            <div class="message-bubble">👋 I'm your Lead Copilot. Select a lead or ask me about your pipeline.</div>
+            <div class="message-bubble">👋 I'm your Lead Agent. Select a lead or ask me about your pipeline.</div>
           </div>
         </div>
         <div class="copilot-suggestions" id="copilot-suggestions"></div>
@@ -72,7 +72,7 @@ export function renderCopilotPanel(container: HTMLElement): void {
           </div>
         </div>
         <form class="copilot-input" id="copilot-form">
-          <input type="text" placeholder="Ask Lead Copilot..." id="copilot-input" />
+          <input type="text" placeholder="Ask Lead Agent..." id="copilot-input" />
           <button type="submit">Send</button>
         </form>
       </div>
