@@ -14,9 +14,11 @@ let mcpClient: Client | null = null;
 let currentConfig: BcMcpConfig | null = null;
 
 function buildMcpUrl(config: BcMcpConfig): string {
-  // BC MCP server URL format:
-  // https://businesscentral.dynamics.com/{tenant}/{environment}/mcp/{configName}
-  return `https://businesscentral.dynamics.com/${encodeURIComponent(config.tenant)}/${encodeURIComponent(config.environment)}/mcp/${encodeURIComponent(config.mcpConfig)}`;
+  // BC MCP server URL format (from Microsoft's BcMCPProxy source):
+  // https://api.businesscentral.dynamics.com/v2.0/{environment}/mcp
+  // Company and ConfigurationName are passed as HTTP headers, NOT in the URL.
+  const env = encodeURIComponent(config.environment);
+  return `https://api.businesscentral.dynamics.com/v2.0/${env}/mcp`;
 }
 
 export async function getOrCreateClient(config?: BcMcpConfig): Promise<Client> {
@@ -41,7 +43,12 @@ export async function getOrCreateClient(config?: BcMcpConfig): Promise<Client> {
 
   const headers: Record<string, string> = {
     'Accept': 'application/json, text/event-stream',
+    'Company': settings.company,
+    'X-Client-Application': 'LeadAgent',
   };
+  if (settings.mcpConfig) {
+    headers['ConfigurationName'] = settings.mcpConfig;
+  }
   if (settings.accessToken) {
     headers['Authorization'] = `Bearer ${settings.accessToken}`;
   }
