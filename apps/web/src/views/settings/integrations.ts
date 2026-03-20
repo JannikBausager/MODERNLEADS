@@ -1,3 +1,4 @@
+import { api } from '../../api.js';
 import { showToast } from '../../components/toast.js';
 
 interface Integration {
@@ -19,7 +20,7 @@ const CATEGORIES: Record<string, Category> = {
     title: 'Social Media',
     description: 'Connect your social channels to capture leads from social selling and track engagement across platforms.',
     integrations: [
-      { id: 'linkedin', name: 'LinkedIn Sales Navigator', description: 'Import leads and track InMail outreach. Sync connections and engagement data.', icon: '🔷', status: 'coming_soon' },
+      { id: 'linkedin', name: 'LinkedIn Sales Navigator', description: 'Import leads and track InMail outreach. Sync connections and engagement data.', icon: '🔷', status: 'available' },
       { id: 'facebook', name: 'Facebook / Meta Business', description: 'Capture leads from Facebook Lead Ads and Messenger conversations.', icon: '🔵', status: 'coming_soon' },
       { id: 'twitter', name: 'Twitter / X', description: 'Monitor mentions and DMs for lead opportunities and brand engagement.', icon: '🐦', status: 'coming_soon' },
       { id: 'instagram', name: 'Instagram Business', description: 'Track business inquiries from Instagram DMs and story interactions.', icon: '📸', status: 'coming_soon' },
@@ -122,11 +123,12 @@ export function renderConnectionCategory(container: HTMLElement, categoryId: str
               </span>
               ${int.status === 'coming_soon'
                 ? '<button class="btn btn-sm btn-ghost" data-notify="' + int.id + '">Notify Me</button>'
-                : '<button class="btn btn-sm btn-secondary">Configure</button>'}
+                : '<button class="btn btn-sm btn-secondary" data-configure="' + int.id + '">Configure</button>'}
             </div>
           </div>
         `).join('')}
       </div>
+      <div id="linkedin-config-panel"></div>
     </div>
   `;
 
@@ -139,4 +141,79 @@ export function renderConnectionCategory(container: HTMLElement, categoryId: str
       showToast(`You'll be notified when ${name} is available!`, 'success');
     });
   });
+
+  container.querySelectorAll('.btn-secondary[data-configure]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const integrationId = (btn as HTMLElement).dataset.configure;
+      if (integrationId === 'linkedin') {
+        renderLinkedInConfigPanel(container.querySelector('#linkedin-config-panel') as HTMLElement);
+      }
+    });
+  });
+}
+
+async function renderLinkedInConfigPanel(container: HTMLElement): Promise<void> {
+  container.innerHTML = `
+    <div class="card settings-form-card" style="margin-top: 1.5rem;">
+      <div class="connection-card-header" style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;">
+        <span style="font-size:1.5rem;">🔷</span>
+        <div>
+          <h3 style="margin:0;font-size:1rem;">LinkedIn Configuration</h3>
+          <p style="margin:0;font-size:.85rem;color:#5f6368;">Configure your LinkedIn API credentials to enable lead scoring.</p>
+        </div>
+      </div>
+      <div id="linkedin-settings-form-area" style="color:#5f6368;">Loading settings...</div>
+    </div>
+  `;
+
+  try {
+    const settings = await api.linkedin.getSettings();
+    const area = container.querySelector('#linkedin-settings-form-area') as HTMLElement;
+    area.innerHTML = `
+      <form id="linkedin-settings-form">
+        <div class="form-group">
+          <label>Client ID</label>
+          <input type="text" class="form-input" id="li-client-id" value="${settings.clientId || ''}" placeholder="Enter LinkedIn Client ID" />
+        </div>
+        <div class="form-group">
+          <label>Client Secret</label>
+          <input type="password" class="form-input" id="li-client-secret" value="" placeholder="${settings.hasSecret ? '••••••(saved)' : 'Enter LinkedIn Client Secret'}" />
+        </div>
+        <div class="form-group">
+          <label>Redirect URI</label>
+          <input type="text" class="form-input" id="li-redirect-uri" value="${settings.redirectUri || ''}" />
+        </div>
+        <div class="form-group">
+          <label class="toggle-label">
+            <input type="checkbox" id="li-enabled" ${settings.enabled ? 'checked' : ''} />
+            <span class="toggle-switch"></span>
+            Enable LinkedIn Integration
+          </label>
+        </div>
+        <div class="settings-actions" style="display:flex;align-items:center;gap:1rem;">
+          <button type="submit" class="btn btn-primary">Save LinkedIn Settings</button>
+          <a href="#/linkedin-scoring" class="btn btn-secondary" style="text-decoration:none;">→ LinkedIn Scoring Rules</a>
+        </div>
+      </form>
+    `;
+
+    area.querySelector('#linkedin-settings-form')!.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data: any = {
+        clientId: (area.querySelector('#li-client-id') as HTMLInputElement).value,
+        redirectUri: (area.querySelector('#li-redirect-uri') as HTMLInputElement).value,
+        enabled: (area.querySelector('#li-enabled') as HTMLInputElement).checked,
+      };
+      const secret = (area.querySelector('#li-client-secret') as HTMLInputElement).value;
+      if (secret) data.clientSecret = secret;
+      try {
+        await api.linkedin.updateSettings(data);
+        showToast('LinkedIn settings saved!', 'success');
+      } catch (err: any) {
+        showToast(err.message || 'Failed to save LinkedIn settings', 'error');
+      }
+    });
+  } catch (err: any) {
+    container.querySelector('#linkedin-settings-form-area')!.innerHTML = `<p style="color:#dc2626;">Failed to load LinkedIn settings: ${err.message || 'Unknown error'}</p>`;
+  }
 }

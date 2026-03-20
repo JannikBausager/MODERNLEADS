@@ -40,6 +40,9 @@ router.get('/customers', async (req, res, next) => {
     try {
       const { getBcCustomers } = await import('../bcAdapter/mcpClient.js');
       const customers = await getBcCustomers();
+      console.log(`[BC Customers] Fetched ${customers.length} customers from BC`);
+      if (customers.length > 0) console.log('[BC Customers] Sample:', JSON.stringify(customers[0]).substring(0, 200));
+      else console.log('[BC Customers] Empty result from MCP tool');
       res.json({ source: 'bc', data: customers });
     } catch (err: any) {
       res.json({

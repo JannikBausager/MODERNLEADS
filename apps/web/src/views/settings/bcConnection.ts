@@ -393,12 +393,30 @@ export function renderBcConnection(container: HTMLElement): void {
       }
 
       // Response may be { source, data, message } or a raw array
-      const data = Array.isArray(response) ? response : response?.data ?? [];
+      const rawData = Array.isArray(response) ? response : response?.data ?? [];
       const source = response?.source ?? 'unknown';
       const message = response?.message ?? '';
 
-      if (!data || data.length === 0) {
-        previewContent.innerHTML = '<div class="empty-state">No data available.</div>';
+      // Handle case where data is a string (BC returned non-JSON like markdown)
+      if (typeof rawData === 'string') {
+        const sourceBadge = source === 'bc'
+          ? '<span class="opp-source-badge opp-source-live" style="margin-left:.5rem">● BC Live</span>'
+          : '<span class="opp-source-badge opp-source-mock" style="margin-left:.5rem">Mock</span>';
+        previewContent.innerHTML = `
+          ${message ? `<div class="opp-message">${esc(message)}</div>` : ''}
+          <div style="font-size:.75rem;color:#64748b;margin-bottom:.5rem">Response ${sourceBadge}</div>
+          <pre style="background:#f8fafc;padding:.75rem;border-radius:6px;font-size:.75rem;white-space:pre-wrap;max-height:400px;overflow:auto">${esc(rawData)}</pre>
+        `;
+        return;
+      }
+
+      const data = Array.isArray(rawData) ? rawData : [];
+
+      if (data.length === 0) {
+        previewContent.innerHTML = `
+          ${message ? `<div class="opp-message">${esc(message)}</div>` : ''}
+          <div class="empty-state">No data available.${source === 'bc' ? ' The BC MCP tool returned an empty result.' : ''}</div>
+        `;
         return;
       }
 

@@ -335,3 +335,124 @@ export function setEntraSettings(data: {
   if (data.redirectUri !== undefined) setSetting('entra_redirect_uri', data.redirectUri);
   return getEntraSettings();
 }
+
+// LinkedIn settings
+
+function maskSecret(value: string): string {
+  if (!value || value.length <= 6) return value ? '••••••' : '';
+  return '••••••' + value.slice(-6);
+}
+
+export function getLinkedInSettings() {
+  return {
+    clientId: getSetting('linkedin_client_id') || '',
+    clientSecret: maskSecret(getSetting('linkedin_client_secret') || ''),
+    redirectUri: getSetting('linkedin_redirect_uri') || 'http://localhost:5173/auth/linkedin/callback',
+    accessToken: maskSecret(getSetting('linkedin_access_token') || ''),
+    enabled: getSetting('linkedin_enabled') === 'true',
+    hasToken: !!(getSetting('linkedin_access_token')),
+    hasSecret: !!(getSetting('linkedin_client_secret')),
+  };
+}
+
+export function setLinkedInSettings(data: {
+  clientId?: string;
+  clientSecret?: string;
+  redirectUri?: string;
+  accessToken?: string;
+  enabled?: boolean;
+}) {
+  if (data.clientId !== undefined) setSetting('linkedin_client_id', data.clientId);
+  if (data.clientSecret !== undefined) setSetting('linkedin_client_secret', data.clientSecret);
+  if (data.redirectUri !== undefined) setSetting('linkedin_redirect_uri', data.redirectUri);
+  if (data.accessToken !== undefined) setSetting('linkedin_access_token', data.accessToken);
+  if (data.enabled !== undefined) setSetting('linkedin_enabled', data.enabled ? 'true' : 'false');
+  return getLinkedInSettings();
+}
+
+// LinkedIn scoring rules
+
+export interface LinkedInScoringRule {
+  id: string;
+  category: string;
+  signal: string;
+  description: string;
+  score: number;
+  enabled: number;
+  isDefault: number;
+  createdAt: string;
+}
+
+export function getLinkedInScoringRules(): LinkedInScoringRule[] {
+  const stmt = db.prepare('SELECT * FROM linkedin_scoring_rules ORDER BY category, score DESC');
+  return stmt.all() as LinkedInScoringRule[];
+}
+
+export function upsertLinkedInScoringRule(rule: {
+  id: string;
+  category: string;
+  signal: string;
+  description: string;
+  score: number;
+  enabled?: number;
+  isDefault?: number;
+}) {
+  const stmt = db.prepare(`
+    INSERT INTO linkedin_scoring_rules (id, category, signal, description, score, enabled, isDefault)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      category = excluded.category,
+      signal = excluded.signal,
+      description = excluded.description,
+      score = excluded.score,
+      enabled = excluded.enabled
+  `);
+  stmt.run(
+    rule.id,
+    rule.category,
+    rule.signal,
+    rule.description,
+    rule.score,
+    rule.enabled ?? 1,
+    rule.isDefault ?? 0,
+  );
+  const get = db.prepare('SELECT * FROM linkedin_scoring_rules WHERE id = ?');
+  return get.get(rule.id) as LinkedInScoringRule;
+}
+
+export function deleteLinkedInScoringRule(id: string): boolean {
+  const existing = db.prepare('SELECT isDefault FROM linkedin_scoring_rules WHERE id = ?').get(id) as any;
+  if (!existing) return false;
+  if (existing.isDefault === 1) return false;
+  db.prepare('DELETE FROM linkedin_scoring_rules WHERE id = ?').run(id);
+  return true;
+}
+
+export function resetLinkedInScoringDefaults(): void {
+  db.prepare('DELETE FROM linkedin_scoring_rules').run();
+  const ins = db.prepare(
+    `INSERT OR IGNORE INTO linkedin_scoring_rules (id, category, signal, description, score, enabled, isDefault) VALUES (?, ?, ?, ?, ?, 1, 1)`
+  );
+  const defaults: [string, string, string, string, number][] = [
+    ['like_reaction', 'engagement', 'like_reaction', 'Like or Reaction on your post', 2],
+    ['comment_post', 'engagement', 'comment_post', 'Comment on your post', 8],
+    ['share_reshare', 'engagement', 'share_reshare', 'Share/Reshare of your post', 10],
+    ['inbound_connection', 'engagement', 'inbound_connection', 'Inbound connection request', 15],
+    ['direct_message', 'engagement', 'direct_message', 'Direct message or InMail reply', 20],
+    ['profile_view', 'engagement', 'profile_view', 'Profile view by target prospect', 5],
+    ['follow', 'engagement', 'follow', 'Follow your profile or company page', 3],
+    ['repeat_engagement', 'engagement', 'repeat_engagement', 'Multiple/repeat engagements', 5],
+    ['company_size_smb', 'fit', 'company_size_smb', 'Company size fits SMB target (50-500 employees)', 10],
+    ['target_industry', 'fit', 'target_industry', 'Industry is a target vertical', 5],
+    ['senior_decision_maker', 'fit', 'senior_decision_maker', 'Role is senior decision-maker (CxO, VP, Director)', 10],
+    ['target_location', 'fit', 'target_location', 'Location in target market (supported region)', 2],
+    ['low_value_role', 'negative', 'low_value_role', 'Low-value role or student (not a decision-maker)', -5],
+    ['company_too_large', 'negative', 'company_too_large', 'Company too large or not SMB (>1000 employees)', -10],
+    ['non_target_industry', 'negative', 'non_target_industry', 'Non-target industry (unrelated sector)', -5],
+    ['competitor_vendor', 'negative', 'competitor_vendor', 'Competitor or vendor company (not a buyer)', 0],
+    ['stale_lead', 'decay', 'stale_lead', 'No recent engagement (score decays over time)', -2],
+  ];
+  for (const d of defaults) {
+    ins.run(...d);
+  }
+}

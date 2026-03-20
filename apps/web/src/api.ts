@@ -188,4 +188,14 @@ export const api = {
     status: () => request<AuthStatus>('/auth/status'),
     signOut: () => request('/auth/signout', { method: 'POST' }),
   },
+  linkedin: {
+    getSettings: () => request<any>('/linkedin/settings'),
+    updateSettings: (data: any) => request<any>('/linkedin/settings', { method: 'PUT', body: JSON.stringify(data) }),
+    getScoringRules: () => request<any[]>('/linkedin/scoring-rules'),
+    updateScoringRule: (id: string, data: any) => request<any>(`/linkedin/scoring-rules/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    createScoringRule: (data: any) => request<any>('/linkedin/scoring-rules', { method: 'POST', body: JSON.stringify(data) }),
+    deleteScoringRule: (id: string) => request<any>(`/linkedin/scoring-rules/${id}`, { method: 'DELETE' }),
+    resetScoringDefaults: () => request<any>('/linkedin/scoring-rules/reset', { method: 'POST' }),
+    interpretRule: (text: string) => request<any>('/linkedin/interpret-rule', { method: 'POST', body: JSON.stringify({ text }) }),
+  },
 };

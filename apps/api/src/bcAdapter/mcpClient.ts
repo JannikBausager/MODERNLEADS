@@ -135,12 +135,59 @@ export async function callMcpTool(toolName: string, args: Record<string, any>): 
 // Parse MCP tool result content into usable data
 function parseMcpResult(result: any): any {
   if (result.content && Array.isArray(result.content)) {
+    // Collect all text content
+    const texts: string[] = [];
     for (const item of result.content) {
-      if (item.type === 'text') {
-        try { return JSON.parse(item.text); } catch { return item.text; }
+      if (item.type === 'text' && item.text) {
+        texts.push(item.text);
       }
     }
+
+    // Try to parse each text item
+    for (const text of texts) {
+      // Try JSON parse first
+      try {
+        const parsed = JSON.parse(text);
+        // OData-style response: { value: [...] }
+        if (parsed && typeof parsed === 'object' && Array.isArray(parsed.value)) {
+          return parsed.value;
+        }
+        // Direct array or object
+        return parsed;
+      } catch {
+        // Not JSON — continue
+      }
+    }
+
+    // If we have text content but it's not JSON, try to parse markdown/CSV tables
+    if (texts.length > 0) {
+      const combined = texts.join('\n');
+      // Check for pipe-delimited table (markdown)
+      const lines = combined.split('\n').filter(l => l.includes('|') && !l.match(/^\s*\|[-:| ]+\|\s*$/));
+      if (lines.length >= 2) {
+        const headers = lines[0].split('|').map(h => h.trim()).filter(Boolean);
+        const rows: any[] = [];
+        for (let i = 1; i < lines.length; i++) {
+          const cells = lines[i].split('|').map(c => c.trim()).filter(Boolean);
+          if (cells.length === headers.length) {
+            const row: Record<string, string> = {};
+            headers.forEach((h, j) => { row[h] = cells[j]; });
+            rows.push(row);
+          }
+        }
+        if (rows.length > 0) return rows;
+      }
+      // Return raw text as-is
+      return combined;
+    }
   }
+
+  // Fallback: check if result itself has data
+  if (result && typeof result === 'object') {
+    if (Array.isArray(result.value)) return result.value;
+    if (Array.isArray(result.data)) return result.data;
+  }
+
   return result;
 }
 
@@ -195,7 +242,17 @@ export async function getBcCustomers(): Promise<any[]> {
       'getCustomers', 'get_customers', 'listCustomers', 'list_customers', 'customers',
     ]);
     const result = await callMcpTool(toolName, {});
+    console.log('[BC MCP] Raw customers result type:', typeof result);
+    console.log('[BC MCP] Raw customers result keys:', result ? Object.keys(result) : 'null');
+    if (result?.content) {
+      console.log('[BC MCP] Content items:', result.content.length);
+      for (const item of result.content) {
+        console.log(`[BC MCP]   type=${item.type}, text preview: ${String(item.text ?? item.data ?? '').substring(0, 300)}`);
+      }
+    }
     const data = parseMcpResult(result);
+    console.log('[BC MCP] Parsed customers type:', typeof data, 'isArray:', Array.isArray(data), 'length:', Array.isArray(data) ? data.length : 'N/A');
+    if (typeof data === 'string') console.log('[BC MCP] Parsed as string preview:', data.substring(0, 300));
     return Array.isArray(data) ? data : [];
   } catch (err: any) {
     console.error('[BC MCP] Error getting customers:', err.message);

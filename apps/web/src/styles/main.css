@@ -1785,6 +1785,185 @@ tr:hover td {
   border-bottom-color: #00564a;
 }
 
+/* === LinkedIn Scoring Page === */
+.scoring-page {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.scoring-page-header {
+  margin-bottom: 1.5rem;
+}
+
+.scoring-page-header h1 {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  letter-spacing: -0.02em;
+}
+
+.scoring-page-subtitle {
+  font-size: .95rem;
+  color: #5f6368;
+  margin-top: .25rem;
+}
+
+.scoring-category {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-left: 3px solid #6b7280;
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.scoring-category-header {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-bottom: 1rem;
+}
+
+.scoring-category-icon {
+  font-size: 1.1rem;
+}
+
+.scoring-category-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  flex: 1;
+}
+
+.scoring-category-count {
+  font-size: .75rem;
+  color: #5f6368;
+  background: #f3f4f6;
+  padding: .15rem .5rem;
+  border-radius: 999px;
+}
+
+.scoring-rules-list {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+.scoring-rule-row {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .5rem .75rem;
+  border-radius: 6px;
+  background: #f9fafb;
+  border: 1px solid #f3f4f6;
+  transition: background .15s;
+}
+
+.scoring-rule-row:hover {
+  background: #f3f4f6;
+}
+
+.scoring-rule-toggle {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.scoring-rule-toggle input {
+  display: none;
+}
+
+.scoring-rule-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.scoring-rule-name {
+  display: block;
+  font-weight: 600;
+  font-size: .85rem;
+  color: #1a1a1a;
+}
+
+.scoring-rule-desc {
+  display: block;
+  font-size: .78rem;
+  color: #5f6368;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scoring-rule-score {
+  width: 60px;
+  text-align: center;
+  padding: .3rem .25rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: .85rem;
+  font-weight: 600;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.scoring-rule-score:focus {
+  border-color: #00564a;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 86, 74, .15);
+}
+
+.scoring-rule-edit,
+.scoring-rule-delete {
+  flex-shrink: 0;
+  padding: .25rem .4rem;
+  font-size: .82rem;
+  cursor: pointer;
+}
+
+/* NL Rule Creator */
+.nl-rule-creator {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin: 1.5rem 0;
+}
+
+.nl-rule-creator h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: .25rem;
+}
+
+.nl-rule-input-row {
+  display: flex;
+  gap: .5rem;
+}
+
+.nl-rule-input-row .form-input {
+  flex: 1;
+}
+
+.nl-rule-preview-card {
+  margin-top: .75rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-left: 3px solid #6b7280;
+  border-radius: 6px;
+}
+
+/* Scoring page actions */
+.scoring-page-actions {
+  display: flex;
+  gap: .75rem;
+  padding-top: .5rem;
+}
+
 /* === Responsive === */
 @media (max-width: 768px) {
   #copilot-panel { display: none; }
