@@ -23,8 +23,8 @@ import {
   InteractionRequiredAuthError,
 } from '@azure/msal-browser';
 
-// BC API scope — this is the standard scope for Business Central API access
-const BC_SCOPE = 'https://dynamics.microsoft.com/.default';
+// BC API scope — Business Central Online uses this resource URI
+const BC_SCOPE = 'https://api.businesscentral.dynamics.com/.default';
 
 let msalInstance: PublicClientApplication | null = null;
 let currentAccount: AccountInfo | null = null;

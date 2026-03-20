@@ -23,8 +23,8 @@ import { getSetting, setSetting } from '../db/repository.js';
 // Azure CLI first-party client ID — no app registration required
 const AZURE_CLI_CLIENT_ID = '04b07795-8ddb-461a-bbee-02f9e1bf7b46';
 
-// BC API scope
-const BC_SCOPES = ['https://dynamics.microsoft.com/.default'];
+// BC API scope — Business Central Online uses this resource URI
+const BC_SCOPES = ['https://api.businesscentral.dynamics.com/.default'];
 
 interface PendingAuth {
   userCode: string;
