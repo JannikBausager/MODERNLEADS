@@ -67,12 +67,14 @@ async function loadPipeline(container: HTMLElement) {
   try {
     const [leads, bcOppResponse] = await Promise.all([
       api.leads.list(),
-      api.bc.opportunities().catch(() => ({ data: [] })),
+      api.bc.opportunities().catch(() => ({ source: 'mock', data: [] })),
     ]);
 
-    const bcOpportunities: any[] = Array.isArray(bcOppResponse)
-      ? bcOppResponse
-      : (bcOppResponse as any)?.data ?? [];
+    const oppResponse = bcOppResponse as any;
+    const bcOpportunities: any[] = Array.isArray(oppResponse)
+      ? oppResponse
+      : oppResponse?.data ?? [];
+    const oppSource: string = oppResponse?.source ?? 'unknown';
 
     const grouped: Record<string, Lead[]> = {};
     for (const s of STAGES) grouped[s] = [];
@@ -172,9 +174,13 @@ async function loadPipeline(container: HTMLElement) {
     const oppCol = document.createElement('div');
     oppCol.className = 'pipeline-col pipeline-col-opp';
 
+    const sourceLabel = oppSource === 'bc'
+      ? '<span class="opp-source-badge opp-source-live">● BC Live</span>'
+      : '<span class="opp-source-badge opp-source-mock">Mock Data</span>';
+
     oppCol.innerHTML = `
       <div class="pipeline-col-header pipeline-col-header-opp">
-        <span class="pipeline-col-title">Opportunities</span>
+        <span class="pipeline-col-title">Opportunities ${sourceLabel}</span>
         <span class="pipeline-col-count">${bcOpportunities.length}</span>
       </div>
       <div class="pipeline-col-body pipeline-col-body-opp"></div>
@@ -293,24 +299,34 @@ function buildOppCard(opp: any): HTMLElement {
   const card = document.createElement('div');
   card.className = 'pipeline-card opp-card';
 
-  const value = opp.estimatedValue ?? opp.value ?? 0;
-  const status = opp.status ?? 'Open';
-  const probability = opp.probability ?? opp.chance ?? '';
-  const name = opp.description ?? opp.name ?? 'Opportunity';
-  const contact = opp.contactName ?? opp.contact ?? '';
-  const closeDate = opp.closingDate ?? opp.closeDate ?? '';
+  // BC fields use various naming conventions (PascalCase, snake_case, camelCase)
+  const value = opp.estimatedValue ?? opp.Estimated_Value ?? opp['Estimated Value']
+    ?? opp.estimated_value ?? opp.value ?? opp.Value ?? 0;
+  const status = opp.status ?? opp.Status ?? 'Open';
+  const probability = opp.probability ?? opp.Probability ?? opp.chance ?? opp['Chances of Success'] ?? '';
+  const name = opp.description ?? opp.Description ?? opp.name ?? opp.Name ?? 'Opportunity';
+  const contact = opp.contactName ?? opp.Contact_Name ?? opp['Contact Name']
+    ?? opp.contact_name ?? opp.contact ?? opp.Contact ?? '';
+  const closeDate = opp.closingDate ?? opp.Date_Closed ?? opp['Date Closed']
+    ?? opp.closing_date ?? opp.closeDate ?? opp.close_date ?? '';
+  const no = opp.no ?? opp.No_ ?? opp.No ?? opp['No.'] ?? '';
+  const salesCycle = opp.salesCycleCode ?? opp.Sales_Cycle_Code ?? opp['Sales Cycle Code'] ?? '';
 
   const statusClass = status === 'Won' ? 'opp-won' : status === 'Lost' ? 'opp-lost' : 'opp-active';
 
   let html = `
     <div class="pipeline-card-header">
       <span class="pipeline-card-name">${esc(name)}</span>
-      <span class="opp-value">${formatCurrency(value)}</span>
+      <span class="opp-value">${formatCurrency(Number(value) || 0)}</span>
     </div>
   `;
 
   if (contact) {
-    html += `<div class="pipeline-card-company">${esc(contact)}</div>`;
+    html += `<div class="pipeline-card-company">👤 ${esc(contact)}</div>`;
+  }
+
+  if (no) {
+    html += `<div class="pipeline-card-company" style="font-size:0.75rem;color:#64748b">#${esc(no)}${salesCycle ? ` · ${esc(salesCycle)}` : ''}</div>`;
   }
 
   html += `

@@ -102,20 +102,11 @@ router.get('/opportunities', async (req, res, next) => {
     }
 
     try {
-      const { callMcpTool } = await import('../bcAdapter/mcpClient.js');
-      const result = await callMcpTool('getOpportunities', {
-        company: settings.company,
-      });
-      let data: any[] = [];
-      if (result.content && Array.isArray(result.content)) {
-        for (const item of result.content) {
-          if (item.type === 'text') {
-            try { data = JSON.parse(item.text); } catch { data = [item.text]; }
-          }
-        }
-      }
-      res.json({ source: 'bc', data: Array.isArray(data) ? data : [] });
+      const { getBcOpportunities } = await import('../bcAdapter/mcpClient.js');
+      const data = await getBcOpportunities();
+      res.json({ source: 'bc', data });
     } catch (err: any) {
+      console.error('[BC Opportunities] MCP error:', err.message);
       res.json({
         source: 'mock',
         data: getMockOpportunities(),
