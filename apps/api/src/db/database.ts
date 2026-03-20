@@ -83,6 +83,11 @@ insertSetting.run('bc_auth_type', 'none');
 insertSetting.run('bc_access_token', '');
 insertSetting.run('bc_mcp_enabled', 'false');
 
+// Entra ID (MSAL) defaults
+insertSetting.run('entra_client_id', '');
+insertSetting.run('entra_tenant_id', '');
+insertSetting.run('entra_redirect_uri', 'http://localhost:5173');
+
 // App general defaults
 insertSetting.run('app_general_default_owner', '');
 insertSetting.run('app_general_timezone', 'UTC');

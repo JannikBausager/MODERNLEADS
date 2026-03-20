@@ -315,3 +315,23 @@ export function setGeneralSettings(data: {
   if (data.leadSources !== undefined) setSetting('app_general_lead_sources', data.leadSources.join(','));
   return getGeneralSettings();
 }
+
+// Entra ID settings
+export function getEntraSettings() {
+  return {
+    clientId: getSetting('entra_client_id') || '',
+    tenantId: getSetting('entra_tenant_id') || '',
+    redirectUri: getSetting('entra_redirect_uri') || 'http://localhost:5173',
+  };
+}
+
+export function setEntraSettings(data: {
+  clientId?: string;
+  tenantId?: string;
+  redirectUri?: string;
+}) {
+  if (data.clientId !== undefined) setSetting('entra_client_id', data.clientId);
+  if (data.tenantId !== undefined) setSetting('entra_tenant_id', data.tenantId);
+  if (data.redirectUri !== undefined) setSetting('entra_redirect_uri', data.redirectUri);
+  return getEntraSettings();
+}

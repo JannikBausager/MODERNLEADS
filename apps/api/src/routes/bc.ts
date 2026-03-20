@@ -80,4 +80,51 @@ function getMockContracts() {
   ];
 }
 
+function getMockOpportunities() {
+  return [
+    { no: 'OPP1000', description: 'Enterprise Licensing', contactName: 'John Smith', salesCycleCode: 'SALES', estimatedValue: 45000, status: 'In Progress', closingDate: '2026-06-30', probability: 70 },
+    { no: 'OPP2000', description: 'Cloud Migration', contactName: 'Sarah Chen', salesCycleCode: 'SALES', estimatedValue: 120000, status: 'In Progress', closingDate: '2026-08-15', probability: 45 },
+    { no: 'OPP3000', description: 'Support Renewal', contactName: 'Mike Johnson', salesCycleCode: 'SERVICE', estimatedValue: 24000, status: 'Won', closingDate: '2026-03-01', probability: 100 },
+  ];
+}
+
+// GET /api/bc/opportunities — get opportunities from BC via MCP
+router.get('/opportunities', async (req, res, next) => {
+  try {
+    const settings = getBcSettings();
+    if (!settings.enabled || !settings.accessToken) {
+      res.json({
+        source: 'mock',
+        data: getMockOpportunities(),
+        message: 'BC MCP not configured. Showing mock data.',
+      });
+      return;
+    }
+
+    try {
+      const { callMcpTool } = await import('../bcAdapter/mcpClient.js');
+      const result = await callMcpTool('getOpportunities', {
+        company: settings.company,
+      });
+      let data: any[] = [];
+      if (result.content && Array.isArray(result.content)) {
+        for (const item of result.content) {
+          if (item.type === 'text') {
+            try { data = JSON.parse(item.text); } catch { data = [item.text]; }
+          }
+        }
+      }
+      res.json({ source: 'bc', data: Array.isArray(data) ? data : [] });
+    } catch (err: any) {
+      res.json({
+        source: 'mock',
+        data: getMockOpportunities(),
+        message: `BC MCP error: ${err.message}. Showing mock data.`,
+      });
+    }
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

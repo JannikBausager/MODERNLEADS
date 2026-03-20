@@ -65,7 +65,15 @@ async function loadPipeline(container: HTMLElement) {
   const statsEl = container.querySelector('#pipeline-stats') as HTMLElement;
 
   try {
-    const leads = await api.leads.list();
+    const [leads, bcOppResponse] = await Promise.all([
+      api.leads.list(),
+      api.bc.opportunities().catch(() => ({ data: [] })),
+    ]);
+
+    const bcOpportunities: any[] = Array.isArray(bcOppResponse)
+      ? bcOppResponse
+      : (bcOppResponse as any)?.data ?? [];
+
     const grouped: Record<string, Lead[]> = {};
     for (const s of STAGES) grouped[s] = [];
     for (const lead of leads) {
@@ -85,9 +93,12 @@ async function loadPipeline(container: HTMLElement) {
     statsEl.innerHTML = `
       <span class="stat"><strong>${leads.length}</strong> leads</span>
       <span class="stat"><strong>${totalValue}</strong> pipeline score</span>
+      <span class="stat"><strong>${bcOpportunities.length}</strong> opportunities</span>
     `;
 
     board.innerHTML = '';
+
+    // Lead stage columns
     for (const stage of STAGES) {
       const col = document.createElement('div');
       col.className = 'pipeline-col';
@@ -111,9 +122,6 @@ async function loadPipeline(container: HTMLElement) {
       // Drop zone handling
       body.addEventListener('dragover', (e) => {
         e.preventDefault();
-        const fromStage = e.dataTransfer!.types.includes('application/stage')
-          ? (body.dataset as any).__dragFrom ?? ''
-          : '';
         body.classList.add('drag-over');
       });
 
@@ -159,6 +167,28 @@ async function loadPipeline(container: HTMLElement) {
 
       board.appendChild(col);
     }
+
+    // Opportunities column (from BC)
+    const oppCol = document.createElement('div');
+    oppCol.className = 'pipeline-col pipeline-col-opp';
+
+    oppCol.innerHTML = `
+      <div class="pipeline-col-header pipeline-col-header-opp">
+        <span class="pipeline-col-title">Opportunities</span>
+        <span class="pipeline-col-count">${bcOpportunities.length}</span>
+      </div>
+      <div class="pipeline-col-body pipeline-col-body-opp"></div>
+    `;
+
+    const oppBody = oppCol.querySelector('.pipeline-col-body-opp') as HTMLElement;
+
+    for (const opp of bcOpportunities) {
+      const card = buildOppCard(opp);
+      oppBody.appendChild(card);
+    }
+
+    board.appendChild(oppCol);
+
   } catch {
     board.innerHTML = '<div class="empty-state error">Failed to load pipeline.</div>';
   }
@@ -257,6 +287,48 @@ function buildCard(lead: Lead, stage: string, pipelineContainer: HTMLElement): H
   }
 
   return card;
+}
+
+function buildOppCard(opp: any): HTMLElement {
+  const card = document.createElement('div');
+  card.className = 'pipeline-card opp-card';
+
+  const value = opp.estimatedValue ?? opp.value ?? 0;
+  const status = opp.status ?? 'Open';
+  const probability = opp.probability ?? opp.chance ?? '';
+  const name = opp.description ?? opp.name ?? 'Opportunity';
+  const contact = opp.contactName ?? opp.contact ?? '';
+  const closeDate = opp.closingDate ?? opp.closeDate ?? '';
+
+  const statusClass = status === 'Won' ? 'opp-won' : status === 'Lost' ? 'opp-lost' : 'opp-active';
+
+  let html = `
+    <div class="pipeline-card-header">
+      <span class="pipeline-card-name">${esc(name)}</span>
+      <span class="opp-value">${formatCurrency(value)}</span>
+    </div>
+  `;
+
+  if (contact) {
+    html += `<div class="pipeline-card-company">${esc(contact)}</div>`;
+  }
+
+  html += `
+    <div class="pipeline-card-footer">
+      <span class="opp-status-badge ${statusClass}">${esc(status)}</span>
+      ${probability !== '' ? `<span class="opp-probability">${probability}%</span>` : ''}
+      ${closeDate ? `<span class="pipeline-card-age">${esc(closeDate)}</span>` : ''}
+    </div>
+  `;
+
+  card.innerHTML = html;
+  return card;
+}
+
+function formatCurrency(value: number): string {
+  if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+  if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
+  return `$${value}`;
 }
 
 function esc(s: string): string {

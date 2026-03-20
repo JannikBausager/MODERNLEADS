@@ -94,6 +94,12 @@ export interface GeneralSettings {
   leadSources: string[];
 }
 
+export interface EntraSettings {
+  clientId: string;
+  tenantId: string;
+  redirectUri: string;
+}
+
 export const api = {
   leads: {
     list: (params?: { stage?: string; search?: string }) =>
@@ -147,9 +153,13 @@ export const api = {
     getNotifications: () => request<NotificationSettings>('/settings/notifications'),
     updateNotifications: (data: Partial<NotificationSettings>) =>
       request<NotificationSettings>('/settings/notifications', { method: 'PUT', body: JSON.stringify(data) }),
+    getEntra: () => request<EntraSettings>('/settings/entra'),
+    updateEntra: (data: Partial<EntraSettings>) =>
+      request<EntraSettings>('/settings/entra', { method: 'PUT', body: JSON.stringify(data) }),
   },
   bc: {
     customers: () => request<any[]>('/bc/customers'),
     contracts: () => request<any[]>('/bc/contracts'),
+    opportunities: () => request<any[]>('/bc/opportunities'),
   },
 };

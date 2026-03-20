@@ -1,5 +1,13 @@
 import { api, type BcSettings } from '../../api.js';
 import { showToast } from '../../components/toast.js';
+import {
+  initializeMsal,
+  signIn as msalSignIn,
+  signOut as msalSignOut,
+  isSignedIn,
+  getAccount,
+  acquireAndStoreToken,
+} from '../../auth/msalAuth.js';
 
 const DEFAULT_SETTINGS: BcSettings = {
   enabled: false,
@@ -38,7 +46,44 @@ export function renderBcConnection(container: HTMLElement): void {
           <span class="integration-status-badge" id="bc-status-badge">Not Connected</span>
         </div>
 
+        <!-- Entra ID Authentication -->
+        <div class="auth-section" id="auth-section">
+          <h4 class="auth-section-title">🔐 Authentication (Microsoft Entra ID)</h4>
+          <p class="form-hint" style="margin-bottom:.75rem">
+            Register an app in <a href="https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps" target="_blank">Azure Portal → App registrations</a>.
+            Add a <strong>SPA redirect URI</strong> (<code>http://localhost:5173</code>) and grant <strong>Dynamics 365 Business Central → user_impersonation</strong> API permission.
+          </p>
+          <div class="form-row">
+            <div class="form-group form-group-half">
+              <label>Application (Client) ID</label>
+              <input type="text" class="form-input" id="entra-client-id" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+            </div>
+            <div class="form-group form-group-half">
+              <label>Directory (Tenant) ID</label>
+              <input type="text" class="form-input" id="entra-tenant-id" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Redirect URI</label>
+            <input type="text" class="form-input" id="entra-redirect-uri" placeholder="http://localhost:5173" />
+            <span class="form-hint">Must match exactly what is configured in your Azure App Registration (SPA)</span>
+          </div>
+          <div class="settings-actions" style="border-top:none;padding-top:0">
+            <button type="button" class="btn btn-primary btn-microsoft" id="btn-entra-signin">
+              <svg width="16" height="16" viewBox="0 0 21 21" fill="none" style="margin-right:6px;vertical-align:middle"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+              Sign in with Microsoft
+            </button>
+            <button type="button" class="btn btn-secondary" id="btn-entra-signout" style="display:none">Sign Out</button>
+            <button type="button" class="btn btn-secondary" id="btn-save-entra">Save Entra Config</button>
+          </div>
+          <div class="auth-status" id="auth-status"></div>
+        </div>
+
+        <hr class="section-divider" />
+
+        <!-- MCP Connection -->
         <form id="bc-settings-form">
+          <h4 class="auth-section-title">🔗 MCP Connection</h4>
           <div class="form-group">
             <label class="toggle-label">
               <input type="checkbox" id="bc-enabled" />
@@ -64,19 +109,6 @@ export function renderBcConnection(container: HTMLElement): void {
             <div class="form-group form-group-half">
               <label>MCP Configuration Name</label>
               <input type="text" class="form-input" id="bc-mcp-name" />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group form-group-half">
-              <label>Authentication Type</label>
-              <select class="form-input" id="bc-auth-type">
-                <option value="None">None</option>
-                <option value="bearer">Bearer Token</option>
-              </select>
-            </div>
-            <div class="form-group form-group-half" id="bc-token-group" style="display:none">
-              <label>Access Token</label>
-              <input type="password" class="form-input" id="bc-token" />
             </div>
           </div>
           <div class="settings-actions">
@@ -128,14 +160,15 @@ export function renderBcConnection(container: HTMLElement): void {
   const envEl = container.querySelector('#bc-environment') as HTMLInputElement;
   const companyEl = container.querySelector('#bc-company') as HTMLInputElement;
   const mcpNameEl = container.querySelector('#bc-mcp-name') as HTMLInputElement;
-  const authTypeEl = container.querySelector('#bc-auth-type') as HTMLSelectElement;
-  const tokenGroupEl = container.querySelector('#bc-token-group') as HTMLElement;
-  const tokenEl = container.querySelector('#bc-token') as HTMLInputElement;
   const statusEl = container.querySelector('#connection-status') as HTMLElement;
   const previewSection = container.querySelector('#bc-preview-section') as HTMLElement;
   const previewContent = container.querySelector('#preview-content') as HTMLElement;
   const previewTabs = container.querySelector('#preview-tabs') as HTMLElement;
   const statusBadge = container.querySelector('#bc-status-badge') as HTMLElement;
+  const authStatusEl = container.querySelector('#auth-status') as HTMLElement;
+  const btnSignIn = container.querySelector('#btn-entra-signin') as HTMLButtonElement;
+  const btnSignOut = container.querySelector('#btn-entra-signout') as HTMLButtonElement;
+  const btnSaveEntra = container.querySelector('#btn-save-entra') as HTMLButtonElement;
 
   let activeTab = 'customers';
 
@@ -145,9 +178,6 @@ export function renderBcConnection(container: HTMLElement): void {
     envEl.value = s.environment;
     companyEl.value = s.company;
     mcpNameEl.value = s.mcpConfigName;
-    authTypeEl.value = s.authType;
-    tokenEl.value = s.accessToken || '';
-    tokenGroupEl.style.display = s.authType === 'bearer' ? 'block' : 'none';
     previewSection.style.display = s.enabled ? 'block' : 'none';
     statusBadge.textContent = s.enabled ? 'Enabled' : 'Not Connected';
     statusBadge.className = `integration-status-badge ${s.enabled ? 'badge-enabled' : 'badge-disabled'}`;
@@ -160,13 +190,76 @@ export function renderBcConnection(container: HTMLElement): void {
       environment: envEl.value,
       company: companyEl.value,
       mcpConfigName: mcpNameEl.value,
-      authType: authTypeEl.value,
-      accessToken: tokenEl.value,
+      authType: 'bearer',
+      accessToken: '',
     };
   }
 
-  authTypeEl.addEventListener('change', () => {
-    tokenGroupEl.style.display = authTypeEl.value === 'bearer' ? 'block' : 'none';
+  function updateAuthUI() {
+    const signedIn = isSignedIn();
+    const account = getAccount();
+    btnSignIn.style.display = signedIn ? 'none' : '';
+    btnSignOut.style.display = signedIn ? '' : 'none';
+    if (signedIn && account) {
+      authStatusEl.innerHTML = `<span class="status-success">✅ Signed in as <strong>${esc(account.username)}</strong></span>`;
+    } else {
+      authStatusEl.innerHTML = '<span class="form-hint">Not signed in. Click "Sign in with Microsoft" to authenticate.</span>';
+    }
+  }
+
+  // Entra ID: save config
+  btnSaveEntra.addEventListener('click', async () => {
+    try {
+      await api.settings.updateEntra({
+        clientId: (container.querySelector('#entra-client-id') as HTMLInputElement).value.trim(),
+        tenantId: (container.querySelector('#entra-tenant-id') as HTMLInputElement).value.trim(),
+        redirectUri: (container.querySelector('#entra-redirect-uri') as HTMLInputElement).value.trim(),
+      });
+      showToast('Entra ID configuration saved!', 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Failed to save', 'error');
+    }
+  });
+
+  // Entra ID: sign in
+  btnSignIn.addEventListener('click', async () => {
+    const clientId = (container.querySelector('#entra-client-id') as HTMLInputElement).value.trim();
+    const tenantId = (container.querySelector('#entra-tenant-id') as HTMLInputElement).value.trim();
+    const redirectUri = (container.querySelector('#entra-redirect-uri') as HTMLInputElement).value.trim();
+
+    if (!clientId || !tenantId) {
+      showToast('Please enter Client ID and Tenant ID first', 'error');
+      return;
+    }
+
+    try {
+      authStatusEl.innerHTML = '<span class="status-testing">Initializing…</span>';
+      await initializeMsal({ clientId, tenantId, redirectUri: redirectUri || window.location.origin });
+      await msalSignIn();
+      updateAuthUI();
+
+      // Acquire token and push to backend
+      await acquireAndStoreToken(async (data) => {
+        await api.settings.updateBc({ ...readForm(), authType: data.authType, accessToken: data.accessToken });
+      });
+      showToast('Authenticated! Token sent to backend.', 'success');
+    } catch (err: any) {
+      authStatusEl.innerHTML = `<span class="status-error">❌ ${esc(err.message || 'Sign-in failed')}</span>`;
+      showToast(err.message || 'Sign-in failed', 'error');
+    }
+  });
+
+  // Entra ID: sign out
+  btnSignOut.addEventListener('click', async () => {
+    try {
+      await msalSignOut();
+      // Clear token on backend
+      await api.settings.updateBc({ ...readForm(), authType: 'none', accessToken: '' });
+      updateAuthUI();
+      showToast('Signed out', 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Sign-out failed', 'error');
+    }
   });
 
   enabledEl.addEventListener('change', () => {
@@ -263,6 +356,21 @@ export function renderBcConnection(container: HTMLElement): void {
       if (s.enabled) loadPreview();
     })
     .catch(() => fillForm(DEFAULT_SETTINGS));
+
+  // Load Entra settings
+  api.settings.getEntra()
+    .then(s => {
+      (container.querySelector('#entra-client-id') as HTMLInputElement).value = s.clientId || '';
+      (container.querySelector('#entra-tenant-id') as HTMLInputElement).value = s.tenantId || '';
+      (container.querySelector('#entra-redirect-uri') as HTMLInputElement).value = s.redirectUri || 'http://localhost:5173';
+      // If we have client/tenant configured, try to re-init MSAL to check session
+      if (s.clientId && s.tenantId) {
+        initializeMsal(s).then(() => updateAuthUI()).catch(() => {});
+      } else {
+        updateAuthUI();
+      }
+    })
+    .catch(() => updateAuthUI());
 }
 
 function esc(s: string): string {

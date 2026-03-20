@@ -216,6 +216,7 @@ body {
 .pipeline-col[data-stage="Qualified"] .pipeline-col-header { background: #e6f4ea; color: #1e6d35; }
 .pipeline-col[data-stage="Disqualified"] .pipeline-col-header { background: #fce8e6; color: #9b2c2c; }
 .pipeline-col[data-stage="Converted"] .pipeline-col-header { background: #ece8ff; color: #5521a6; }
+.pipeline-col-opp .pipeline-col-header { background: #e0f2fe; color: #075985; }
 
 .pipeline-col-body {
   flex: 1;
@@ -346,6 +347,100 @@ body {
 .pipeline-card-convert:hover {
   background: #00564a;
   color: #fff;
+}
+
+/* === Opportunity Cards === */
+.opp-card {
+  border-left: 3px solid #0284c7;
+}
+
+.opp-value {
+  font-size: .82rem;
+  font-weight: 700;
+  color: #075985;
+  white-space: nowrap;
+}
+
+.opp-status-badge {
+  font-size: .68rem;
+  font-weight: 600;
+  padding: .15rem .45rem;
+  border-radius: 999px;
+}
+
+.opp-status-badge.opp-active {
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.opp-status-badge.opp-won {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.opp-status-badge.opp-lost {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.opp-probability {
+  font-size: .75rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* Opportunities column separator */
+.pipeline-col-opp {
+  border-left: 2px dashed #d1d5db;
+}
+
+/* === Auth section in settings === */
+.auth-section {
+  margin-bottom: 1rem;
+}
+
+.auth-section-title {
+  font-size: .95rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: .75rem;
+}
+
+.auth-section code {
+  background: #f3f4f6;
+  padding: .15rem .35rem;
+  border-radius: 3px;
+  font-size: .8rem;
+  color: #374151;
+}
+
+.auth-section a {
+  color: #00564a;
+}
+
+.auth-status {
+  margin-top: .5rem;
+  font-size: .85rem;
+}
+
+.section-divider {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 1.25rem 0;
+}
+
+.btn-microsoft {
+  display: inline-flex;
+  align-items: center;
+  background: #fff;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  font-weight: 500;
+}
+
+.btn-microsoft:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
 }
 
 /* === Cards (BC style) === */

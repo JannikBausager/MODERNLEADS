@@ -5,6 +5,7 @@ import {
   getScoringSettings, setScoringSettings,
   getNotificationSettings, setNotificationSettings,
   getGeneralSettings, setGeneralSettings,
+  getEntraSettings, setEntraSettings,
 } from '../db/repository.js';
 
 const router: RouterType = Router();
@@ -120,6 +121,17 @@ router.get('/notifications', (_req, res) => {
 
 router.put('/notifications', (req, res) => {
   const result = setNotificationSettings(req.body);
+  res.json(result);
+});
+
+// === Entra ID Settings ===
+
+router.get('/entra', (_req, res) => {
+  res.json(getEntraSettings());
+});
+
+router.put('/entra', (req, res) => {
+  const result = setEntraSettings(req.body);
   res.json(result);
 });
 
