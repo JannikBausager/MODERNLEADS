@@ -119,6 +119,8 @@ router.get('/opportunities', async (req, res, next) => {
     try {
       const { getBcOpportunities } = await import('../bcAdapter/mcpClient.js');
       const data = await getBcOpportunities();
+      console.log(`[BC Opportunities] Fetched ${data.length} opportunities from BC`);
+      if (data.length > 0) console.log('[BC Opportunities] Sample:', JSON.stringify(data[0]).substring(0, 200));
       res.json({ source: 'bc', data });
     } catch (err: any) {
       console.error('[BC Opportunities] MCP error:', err.message);

@@ -195,6 +195,15 @@ async function loadPipeline(container: HTMLElement) {
       oppBody.appendChild(card);
     }
 
+    if (bcOpportunities.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'pipeline-empty-hint';
+      empty.innerHTML = oppSource === 'bc'
+        ? 'No opportunities in Business Central yet.<br>Convert a qualified lead to create one.'
+        : 'Connect to BC to see opportunities.';
+      oppBody.appendChild(empty);
+    }
+
     board.appendChild(oppCol);
 
   } catch {

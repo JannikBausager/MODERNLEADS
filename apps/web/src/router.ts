@@ -49,7 +49,24 @@ export function resolve(): void {
   navigate('/pipeline');
 }
 
+/** Force re-render even if already on the same route */
+export function forceResolve(): void {
+  resolve();
+}
+
 export function startRouter(): void {
   window.addEventListener('hashchange', () => resolve());
+
+  // Intercept nav link clicks — force re-render even on same route
+  document.addEventListener('click', (e) => {
+    const link = (e.target as HTMLElement).closest('a[href^="#"]') as HTMLAnchorElement | null;
+    if (!link) return;
+    const target = link.getAttribute('href')?.slice(1) || '/';
+    if (target === currentPath()) {
+      e.preventDefault();
+      forceResolve();
+    }
+  });
+
   resolve();
 }
