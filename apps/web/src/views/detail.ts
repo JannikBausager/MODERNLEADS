@@ -82,6 +82,24 @@ function renderLeadContent(container: HTMLElement, lead: Lead, interactions: Int
       </div>
     </div>
 
+    ${lead.agentChallenge || lead.agentRecommendation ? `
+    <div class="card detail-agent-card">
+      <h3>🤖 Agent Insights</h3>
+      ${lead.agentChallenge ? `
+        <div class="detail-agent-section challenge">
+          <div class="detail-agent-label">🔴 Agent Challenge</div>
+          <div class="detail-agent-text">${esc(lead.agentChallenge)}</div>
+        </div>
+      ` : ''}
+      ${lead.agentRecommendation ? `
+        <div class="detail-agent-section recommendation">
+          <div class="detail-agent-label">💬 My Recommendation to You</div>
+          <div class="detail-agent-text">${esc(lead.agentRecommendation)}</div>
+        </div>
+      ` : ''}
+    </div>
+    ` : ''}
+
     <div class="card timeline-card">
       <h3>Timeline</h3>
       <div class="timeline" id="timeline">

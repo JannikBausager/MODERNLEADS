@@ -2680,3 +2680,47 @@ tr:hover td {
   -webkit-line-clamp: unset;
   overflow: visible;
 }
+
+/* === Agent Insights on Lead Detail === */
+
+.detail-agent-card {
+  margin-bottom: 1rem;
+}
+
+.detail-agent-card h3 {
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+  color: #1e293b;
+}
+
+.detail-agent-section {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: #fef2f2;
+  border-left: 4px solid #f87171;
+  margin-bottom: 0.65rem;
+  line-height: 1.6;
+}
+
+.detail-agent-section.recommendation {
+  background: #eff6ff;
+  border-left-color: #60a5fa;
+}
+
+.detail-agent-label {
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.35rem;
+  color: #b91c1c;
+}
+
+.detail-agent-section.recommendation .detail-agent-label {
+  color: #1d4ed8;
+}
+
+.detail-agent-text {
+  color: #475569;
+  font-size: 0.88rem;
+}
