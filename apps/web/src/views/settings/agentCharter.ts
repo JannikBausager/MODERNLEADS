@@ -126,7 +126,7 @@ function renderGrowthItem(g: GrowthOpportunity): string {
         <span class="charter-item-label growth">Opportunity</span>
         <button type="button" class="charter-remove-btn" data-remove="growth" data-id="${g.id}" title="Remove">✕</button>
       </div>
-      <textarea class="form-input charter-item-input growth-desc" rows="2" placeholder="Describe the growth opportunity (e.g., 'Expand presence on TikTok to reach younger decision-makers in tech startups')">${escapeHtml(g.description)}</textarea>
+      <textarea class="form-input charter-item-input growth-desc" rows="4" placeholder="Describe the growth opportunity (e.g., 'Expand presence on TikTok to reach younger decision-makers in tech startups')">${escapeHtml(g.description)}</textarea>
     </div>
   `;
 }
