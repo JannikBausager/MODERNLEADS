@@ -61,11 +61,22 @@ export async function renderAgentCharter(container: HTMLElement): Promise<void> 
           <span class="charter-section-icon">⚠️</span>
           <div>
             <h3>Challenges &amp; Setbacks</h3>
-            <p class="charter-section-desc">Document difficulties the agent faces — low conversion areas, missing assets, weak landing pages, etc. For each challenge, provide a response strategy the agent should follow.</p>
+            <p class="charter-section-desc">Document difficulties the agent encounters — missing materials, broken pages, low conversion areas. For each challenge, describe how the agent should respond.</p>
           </div>
         </div>
-        <div id="challenges-list" class="charter-list">
-          ${charter.challenges.map(renderChallenge).join('')}
+        <div class="charter-table-wrapper">
+          <table class="charter-table" id="challenges-table">
+            <thead>
+              <tr>
+                <th class="charter-col-challenge">Challenge</th>
+                <th class="charter-col-response">Response Suggestion</th>
+                <th class="charter-col-actions"></th>
+              </tr>
+            </thead>
+            <tbody id="challenges-tbody">
+              ${charter.challenges.map(renderChallengeRow).join('')}
+            </tbody>
+          </table>
         </div>
         <button type="button" class="btn btn-outline charter-add-btn" id="add-challenge">
           <span>+</span> Add Challenge
@@ -98,17 +109,13 @@ export async function renderAgentCharter(container: HTMLElement): Promise<void> 
   bindEvents(container);
 }
 
-function renderChallenge(c: Challenge): string {
+function renderChallengeRow(c: Challenge): string {
   return `
-    <div class="charter-list-item" data-id="${c.id}">
-      <div class="charter-item-header">
-        <span class="charter-item-label">Challenge</span>
-        <button type="button" class="charter-remove-btn" data-remove="challenge" data-id="${c.id}" title="Remove">✕</button>
-      </div>
-      <textarea class="form-input charter-item-input challenge-desc" rows="2" placeholder="Describe the challenge (e.g., 'Low response rate on cold emails to manufacturing sector')">${escapeHtml(c.description)}</textarea>
-      <div class="charter-item-response-label">Agent Response Strategy</div>
-      <textarea class="form-input charter-item-input challenge-response" rows="2" placeholder="What should the agent do about this? (e.g., 'Switch to a warmer intro that references industry pain points, and follow up within 48h instead of 72h')">${escapeHtml(c.response)}</textarea>
-    </div>
+    <tr data-id="${c.id}">
+      <td><textarea class="charter-cell-input challenge-desc" rows="3" placeholder="Describe the challenge...">${escapeHtml(c.description)}</textarea></td>
+      <td><textarea class="charter-cell-input challenge-response" rows="3" placeholder="How should the agent respond?">${escapeHtml(c.response)}</textarea></td>
+      <td class="charter-cell-actions"><button type="button" class="charter-remove-btn" data-remove="challenge" data-id="${c.id}" title="Remove row">✕</button></td>
+    </tr>
   `;
 }
 
@@ -125,16 +132,15 @@ function renderGrowthItem(g: GrowthOpportunity): string {
 }
 
 function bindEvents(container: HTMLElement): void {
-  // Add challenge
+  // Add challenge row
   container.querySelector('#add-challenge')!.addEventListener('click', () => {
     const newChallenge: Challenge = { id: generateId(), description: '', response: '' };
     charter.challenges.push(newChallenge);
-    const list = container.querySelector('#challenges-list')!;
-    list.insertAdjacentHTML('beforeend', renderChallenge(newChallenge));
+    const tbody = container.querySelector('#challenges-tbody')!;
+    tbody.insertAdjacentHTML('beforeend', renderChallengeRow(newChallenge));
     bindRemoveButtons(container);
-    // Focus the new textarea
-    const items = list.querySelectorAll('.charter-list-item');
-    const last = items[items.length - 1];
+    const rows = tbody.querySelectorAll('tr');
+    const last = rows[rows.length - 1];
     (last.querySelector('.challenge-desc') as HTMLTextAreaElement)?.focus();
   });
 
@@ -167,7 +173,7 @@ function bindEvents(container: HTMLElement): void {
 
 function bindRemoveButtons(container: HTMLElement): void {
   container.querySelectorAll('.charter-remove-btn').forEach(btn => {
-    btn.replaceWith(btn.cloneNode(true)); // Remove old listeners
+    btn.replaceWith(btn.cloneNode(true));
   });
   container.querySelectorAll('.charter-remove-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -175,10 +181,11 @@ function bindRemoveButtons(container: HTMLElement): void {
       const id = (btn as HTMLElement).dataset.id!;
       if (type === 'challenge') {
         charter.challenges = charter.challenges.filter(c => c.id !== id);
+        (btn as HTMLElement).closest('tr')?.remove();
       } else {
         charter.growthOpportunities = charter.growthOpportunities.filter(g => g.id !== id);
+        (btn as HTMLElement).closest('.charter-list-item')?.remove();
       }
-      (btn as HTMLElement).closest('.charter-list-item')?.remove();
     });
   });
 }
@@ -186,12 +193,12 @@ function bindRemoveButtons(container: HTMLElement): void {
 function collectFormData(container: HTMLElement): void {
   charter.corePriorities = (container.querySelector('#charter-core-priorities') as HTMLTextAreaElement).value;
 
-  // Collect challenges
-  const challengeItems = container.querySelectorAll('#challenges-list .charter-list-item');
-  charter.challenges = Array.from(challengeItems).map(item => ({
-    id: (item as HTMLElement).dataset.id!,
-    description: (item.querySelector('.challenge-desc') as HTMLTextAreaElement).value,
-    response: (item.querySelector('.challenge-response') as HTMLTextAreaElement).value,
+  // Collect challenges from table rows
+  const rows = container.querySelectorAll('#challenges-tbody tr');
+  charter.challenges = Array.from(rows).map(row => ({
+    id: (row as HTMLElement).dataset.id!,
+    description: (row.querySelector('.challenge-desc') as HTMLTextAreaElement).value,
+    response: (row.querySelector('.challenge-response') as HTMLTextAreaElement).value,
   }));
 
   // Collect growth opportunities

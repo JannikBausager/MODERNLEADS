@@ -2061,13 +2061,81 @@ tr:hover td {
   outline: none;
 }
 
-.charter-item-response-label {
-  font-size: 0.75rem;
+/* Challenges table */
+.charter-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.charter-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.charter-table thead th {
+  background: #f1f5f9;
   font-weight: 600;
-  color: #6366f1;
-  margin: 0.6rem 0 0.35rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
+  color: #475569;
+  padding: 0.7rem 0.8rem;
+  text-align: left;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.charter-col-challenge { width: 45%; }
+.charter-col-response { width: 45%; }
+.charter-col-actions { width: 40px; }
+
+.charter-table tbody tr {
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.1s;
+}
+
+.charter-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.charter-table tbody tr:hover {
+  background: #fafbfd;
+}
+
+.charter-table td {
+  padding: 0.5rem;
+  vertical-align: top;
+}
+
+.charter-cell-input {
+  width: 100%;
+  resize: vertical;
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  padding: 0.5rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.charter-cell-input:hover {
+  border-color: #e2e8f0;
+  background: #fff;
+}
+
+.charter-cell-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08);
+  background: #fff;
+  outline: none;
+}
+
+.charter-cell-actions {
+  text-align: center;
+  vertical-align: middle;
 }
 
 .charter-add-btn {

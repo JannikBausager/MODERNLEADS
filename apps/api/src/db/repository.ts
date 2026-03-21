@@ -360,10 +360,38 @@ export function getAgentCharter() {
   const growth = getSetting('agent_charter_growth');
   return {
     corePriorities: corePriorities ?? DEFAULT_CORE_PRIORITIES,
-    challenges: challenges ? JSON.parse(challenges) : [],
+    challenges: challenges ? JSON.parse(challenges) : DEFAULT_CHALLENGES,
     growthOpportunities: growth ? JSON.parse(growth) : [],
   };
 }
+
+const DEFAULT_CHALLENGES: Array<{ id: string; description: string; response: string }> = [
+  {
+    id: 'dc1',
+    description: 'Missing a PDF brochure for the new product line — leads keep asking for it and we have nothing to send.',
+    response: 'I found a draft brochure in the shared drive called "ProductX_Brochure_DRAFT.pdf". Where is the final version? Please upload it so I can attach it to outreach emails.',
+  },
+  {
+    id: 'dc2',
+    description: 'Our landing page for the spring campaign has a broken contact form — leads click through but can\'t submit their details.',
+    response: 'I\'m routing leads to the generic contact page as a workaround. Flagging this to the web team as urgent — every day we lose approximately 5-8 form submissions.',
+  },
+  {
+    id: 'dc3',
+    description: 'Low response rate on cold outreach to the manufacturing sector — emails are getting opened but nobody replies.',
+    response: 'Switching from a generic pitch to an industry-specific template that references supply chain challenges. Also testing shorter subject lines and sending on Tuesday mornings instead of Monday.',
+  },
+  {
+    id: 'dc4',
+    description: 'No case study or reference customer to share with enterprise leads who ask for proof of results.',
+    response: 'Using the Contoso Corp success metrics from the last quarterly review as an informal reference. Can we get approval to publish this as an official case study?',
+  },
+  {
+    id: 'dc5',
+    description: 'Leads from the chatbot channel have very low quality — most are students or job seekers, not buyers.',
+    response: 'Adding a qualifying question to the chatbot flow ("Are you evaluating solutions for your company?") to filter out non-buyers before they enter the pipeline.',
+  },
+];
 
 export function setAgentCharter(data: {
   corePriorities?: string;
