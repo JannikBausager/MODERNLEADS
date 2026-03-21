@@ -17,11 +17,12 @@ let mcpClient: Client | null = null;
 let currentConfig: BcMcpConfig | null = null;
 
 function buildMcpUrl(config: BcMcpConfig): string {
-  // BC MCP server URL format (from Microsoft's BcMCPProxy source):
-  // https://api.businesscentral.dynamics.com/v2.0/{environment}/mcp
+  // BC MCP server URL format:
+  // https://api.businesscentral.dynamics.com/v2.0/{tenantId}/{environment}/mcp
   // Company and ConfigurationName are passed as HTTP headers, NOT in the URL.
+  const tenant = encodeURIComponent(config.tenant);
   const env = encodeURIComponent(config.environment);
-  return `https://api.businesscentral.dynamics.com/v2.0/${env}/mcp`;
+  return `https://api.businesscentral.dynamics.com/v2.0/${tenant}/${env}/mcp`;
 }
 
 /**
@@ -99,12 +100,22 @@ export async function getOrCreateClient(config?: BcMcpConfig): Promise<Client> {
     { requestInit: { headers } }
   );
 
-  mcpClient = new Client(
+  const client = new Client(
     { name: 'modernleads-crm', version: '1.0.0' },
     { capabilities: {}, timeout: MCP_REQUEST_TIMEOUT }
   );
 
-  await mcpClient.connect(transport);
+  try {
+    await client.connect(transport);
+  } catch (err) {
+    // Don't cache a broken client — next call should retry
+    mcpClient = null;
+    currentConfig = null;
+    clearToolCache();
+    throw err;
+  }
+
+  mcpClient = client;
   currentConfig = settings;
   console.log('[BC MCP] Connected successfully');
 
