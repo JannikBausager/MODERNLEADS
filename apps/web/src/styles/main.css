@@ -1256,6 +1256,14 @@ body {
   font-size: 1rem;
   width: 1.25rem;
   text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.settings-sidebar-icon svg {
+  display: block;
 }
 
 .settings-sidebar-label {

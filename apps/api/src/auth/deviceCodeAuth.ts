@@ -99,16 +99,11 @@ export async function startDeviceCodeFlow(tenantId: string): Promise<{
 
           // Auto-store the token
           const token = result.accessToken || '';
-          console.log(`[Auth] Token received: ${token.length} chars, starts with: ${token.substring(0, 20)}...`);
           if (token) {
             setSetting('bc_access_token', token);
             setSetting('bc_auth_type', 'bearer');
           }
           console.log(`[Auth] Device code flow completed for: ${result.account?.username}`);
-
-          // Verify it was stored
-          const stored = getSetting('bc_access_token');
-          console.log(`[Auth] Stored token length: ${stored?.length ?? 0}`);
         }
       })
       .catch((err) => {

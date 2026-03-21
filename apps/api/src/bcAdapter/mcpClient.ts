@@ -253,17 +253,7 @@ export async function getBcCustomers(): Promise<any[]> {
       'getCustomers', 'get_customers', 'listCustomers', 'list_customers', 'customers',
     ]);
     const result = await callMcpTool(toolName, {});
-    console.log('[BC MCP] Raw customers result type:', typeof result);
-    console.log('[BC MCP] Raw customers result keys:', result ? Object.keys(result) : 'null');
-    if (result?.content) {
-      console.log('[BC MCP] Content items:', result.content.length);
-      for (const item of result.content) {
-        console.log(`[BC MCP]   type=${item.type}, text preview: ${String(item.text ?? item.data ?? '').substring(0, 300)}`);
-      }
-    }
     const data = parseMcpResult(result);
-    console.log('[BC MCP] Parsed customers type:', typeof data, 'isArray:', Array.isArray(data), 'length:', Array.isArray(data) ? data.length : 'N/A');
-    if (typeof data === 'string') console.log('[BC MCP] Parsed as string preview:', data.substring(0, 300));
     return Array.isArray(data) ? data : [];
   } catch (err: any) {
     console.error('[BC MCP] Error getting customers:', err.message);
