@@ -2636,3 +2636,47 @@ tr:hover td {
   border-color: #c7d2fe;
   transform: scale(1.1);
 }
+
+/* === Agent Challenge & Recommendation on Pipeline Cards === */
+
+.pipeline-card-agent-section {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 6px;
+  background: #fef2f2;
+  border-left: 3px solid #f87171;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.pipeline-card-agent-section.recommendation {
+  background: #eff6ff;
+  border-left-color: #60a5fa;
+  margin-top: 0.35rem;
+}
+
+.pipeline-card-agent-label {
+  font-weight: 600;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.25rem;
+  color: #b91c1c;
+}
+
+.pipeline-card-agent-section.recommendation .pipeline-card-agent-label {
+  color: #1d4ed8;
+}
+
+.pipeline-card-agent-text {
+  color: #475569;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.pipeline-card:hover .pipeline-card-agent-text {
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}

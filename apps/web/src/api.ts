@@ -31,6 +31,8 @@ export interface Lead {
   score?: number;
   source?: string;
   nextBestAction?: string;
+  agentChallenge?: string;
+  agentRecommendation?: string;
   notes?: string;
   createdAt: string;
   updatedAt: string;

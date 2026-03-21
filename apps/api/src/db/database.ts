@@ -28,6 +28,8 @@ db.exec(`
     stage TEXT NOT NULL DEFAULT 'New' CHECK(stage IN ('New','Contacted','Qualified','Disqualified','Converted')),
     score INTEGER DEFAULT 0 CHECK(score >= 0 AND score <= 100),
     nextBestAction TEXT DEFAULT '',
+    agentChallenge TEXT DEFAULT '',
+    agentRecommendation TEXT DEFAULT '',
     lastInteractionAt TEXT,
     consentFlags TEXT DEFAULT '{}',
     rawPayload TEXT DEFAULT 'null',
@@ -115,6 +117,53 @@ try {
     `);
   }
 } catch { /* migration already applied or not needed */ }
+
+// Migration: add agentChallenge and agentRecommendation columns
+try {
+  const tableInfo2 = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='leads'").get() as any;
+  if (tableInfo2?.sql && !tableInfo2.sql.includes('agentChallenge')) {
+    db.exec(`ALTER TABLE leads ADD COLUMN agentChallenge TEXT DEFAULT ''`);
+    db.exec(`ALTER TABLE leads ADD COLUMN agentRecommendation TEXT DEFAULT ''`);
+
+    // Seed existing leads with example agent insights
+    const seedData: Record<string, { challenge: string; recommendation: string }> = {};
+    const rows = db.prepare('SELECT id, contactName, stage FROM leads').all() as any[];
+    for (const row of rows) {
+      const examples = getAgentInsightForLead(row.contactName, row.stage);
+      seedData[row.id] = examples;
+    }
+    const upd = db.prepare('UPDATE leads SET agentChallenge = ?, agentRecommendation = ? WHERE id = ?');
+    for (const [id, data] of Object.entries(seedData)) {
+      upd.run(data.challenge, data.recommendation, id);
+    }
+  }
+} catch { /* migration already applied or not needed */ }
+
+function getAgentInsightForLead(name: string, stage: string): { challenge: string; recommendation: string } {
+  const insights: Record<string, { challenge: string; recommendation: string }> = {
+    'New': {
+      challenge: `I sent an introductory email to ${name} 3 days ago but haven't received a response. The email was opened twice but no click-through on the CTA link. I also tried connecting on LinkedIn but the request is still pending.`,
+      recommendation: `Could you verify the email address is correct? Also, ${name} may respond better to a phone call — their company profile suggests they prefer direct communication. Try calling during business hours and reference the product interest from their form submission.`,
+    },
+    'Contacted': {
+      challenge: `${name} responded to the initial email positively but went silent after I sent the product brochure. Two follow-up emails over the past week got no reply. They viewed our pricing page twice according to website analytics but didn't fill out the demo request form.`,
+      recommendation: `${name} seems interested but may be evaluating alternatives. Consider sending a short case study from a similar company in their industry rather than another follow-up. You could also ask them directly: "Is there something specific holding you back?" A softer approach might re-engage them.`,
+    },
+    'Qualified': {
+      challenge: `${name} passed qualification but is delaying the final decision. They mentioned needing approval from their CFO and requested a detailed ROI breakdown that we don't currently have prepared for their specific industry. I've been unable to find a matching reference customer.`,
+      recommendation: `Can you prepare a custom ROI estimate for ${name}'s industry? Even a rough calculation showing potential savings would help. Also, offer to join a call with their CFO — having a senior person from our side can accelerate internal approvals. Time is critical here.`,
+    },
+    'Disqualified': {
+      challenge: `${name} was disqualified after we discovered they are a competitor employee doing market research rather than a genuine buyer. They had engaged heavily with our content which inflated their lead score.`,
+      recommendation: `No action needed for this lead. However, this highlights a gap in our qualification process. Consider adding a company verification step early in the funnel to catch competitor or non-buyer profiles before investing outreach effort.`,
+    },
+    'Converted': {
+      challenge: `The conversion process for ${name} took 12 days longer than our target of 30 days. The main delay was waiting for legal review of the contract terms. Our standard terms didn't match their procurement requirements.`,
+      recommendation: `Great outcome! For future deals with similar companies, consider preparing a pre-approved alternate contract template that addresses common enterprise procurement requirements. This could cut 1-2 weeks off the closing cycle.`,
+    },
+  };
+  return insights[stage] || insights['New'];
+}
 
 // BC MCP connection defaults
 insertSetting.run('bc_tenant', 'DirectionsEmeaWorkshop1.onmicrosoft.com');

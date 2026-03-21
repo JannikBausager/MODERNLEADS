@@ -265,6 +265,20 @@ function buildCard(lead: Lead, stage: string, pipelineContainer: HTMLElement): H
     html += `<div class="pipeline-card-action" title="Next best action">💡 ${esc(lead.nextBestAction)}</div>`;
   }
 
+  if (lead.agentChallenge) {
+    html += `<div class="pipeline-card-agent-section">
+      <div class="pipeline-card-agent-label">🔴 Agent Challenge</div>
+      <div class="pipeline-card-agent-text">${esc(lead.agentChallenge)}</div>
+    </div>`;
+  }
+
+  if (lead.agentRecommendation) {
+    html += `<div class="pipeline-card-agent-section recommendation">
+      <div class="pipeline-card-agent-label">💬 My Recommendation to You</div>
+      <div class="pipeline-card-agent-text">${esc(lead.agentRecommendation)}</div>
+    </div>`;
+  }
+
   html += `
     <div class="pipeline-card-footer">
       <span class="pipeline-card-source" title="${sourceLabel}">${sourceIcon} ${sourceLabel}</span>
