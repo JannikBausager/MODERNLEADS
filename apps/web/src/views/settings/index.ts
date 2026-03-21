@@ -18,7 +18,7 @@ interface SidebarItem {
   id: string;
   label: string;
   icon: string;
-  indent?: boolean;
+  children?: SidebarItem[];
 }
 
 interface SidebarGroup {
@@ -31,12 +31,16 @@ const SIDEBAR_SECTIONS: SidebarGroup[] = [
     group: 'Lead Agent',
     items: [
       { id: 'general', label: 'General', icon: '⚙️' },
-      { id: 'scoring', label: 'Scoring', icon: '📊' },
-      { id: 'scoring-linkedin', label: 'LinkedIn', icon: 'linkedin', indent: true },
-      { id: 'scoring-facebook', label: 'Facebook / Meta', icon: 'facebook', indent: true },
-      { id: 'scoring-twitter', label: 'Twitter / X', icon: 'x', indent: true },
-      { id: 'scoring-instagram', label: 'Instagram', icon: 'instagram', indent: true },
-      { id: 'scoring-tiktok', label: 'TikTok', icon: 'tiktok', indent: true },
+      {
+        id: 'scoring', label: 'Scoring', icon: '📊',
+        children: [
+          { id: 'scoring-linkedin', label: 'LinkedIn', icon: 'linkedin' },
+          { id: 'scoring-facebook', label: 'Facebook / Meta', icon: 'facebook' },
+          { id: 'scoring-twitter', label: 'Twitter / X', icon: 'x' },
+          { id: 'scoring-instagram', label: 'Instagram', icon: 'instagram' },
+          { id: 'scoring-tiktok', label: 'TikTok', icon: 'tiktok' },
+        ],
+      },
       { id: 'notifications', label: 'Notifications', icon: '🔔' },
     ],
   },
@@ -56,6 +60,7 @@ const SIDEBAR_SECTIONS: SidebarGroup[] = [
 ];
 
 let activeSection = 'general';
+let scoringExpanded = true;
 
 export function render(container: HTMLElement): void {
   container.innerHTML = `
@@ -69,6 +74,40 @@ export function render(container: HTMLElement): void {
   renderSection(container);
 }
 
+function renderSidebarItem(item: SidebarItem): string {
+  if (!item.children) {
+    return `
+      <button class="settings-sidebar-item ${item.id === activeSection ? 'active' : ''}" data-section="${item.id}">
+        <span class="settings-sidebar-icon">${BRAND_ICONS[item.icon] || item.icon}</span>
+        <span class="settings-sidebar-label">${item.label}</span>
+      </button>
+    `;
+  }
+
+  const isChildActive = item.children.some(c => c.id === activeSection);
+  const isParentActive = item.id === activeSection;
+  const isExpanded = scoringExpanded;
+  const chevron = `<span class="sidebar-chevron ${isExpanded ? 'expanded' : ''}">›</span>`;
+
+  return `
+    <button class="settings-sidebar-item sidebar-parent ${isParentActive ? 'active' : ''}" data-section="${item.id}" data-collapsible="true">
+      <span class="settings-sidebar-icon">${BRAND_ICONS[item.icon] || item.icon}</span>
+      <span class="settings-sidebar-label">${item.label}</span>
+      ${chevron}
+    </button>
+    <div class="sidebar-children ${isExpanded ? 'expanded' : ''}">
+      <div class="sidebar-children-inner">
+        ${item.children.map(child => `
+          <button class="settings-sidebar-item sidebar-indent ${child.id === activeSection ? 'active' : ''}" data-section="${child.id}">
+          <span class="settings-sidebar-icon">${BRAND_ICONS[child.icon] || child.icon}</span>
+          <span class="settings-sidebar-label">${child.label}</span>
+        </button>
+      `).join('')}
+      </div>
+    </div>
+  `;
+}
+
 function renderSidebar(container: HTMLElement): void {
   const sidebar = container.querySelector('#settings-sidebar')!;
   sidebar.innerHTML = `
@@ -78,19 +117,34 @@ function renderSidebar(container: HTMLElement): void {
     ${SIDEBAR_SECTIONS.map(section => `
       <div class="settings-sidebar-group">
         <div class="settings-sidebar-group-label">${section.group}</div>
-        ${section.items.map(item => `
-          <button class="settings-sidebar-item ${item.id === activeSection ? 'active' : ''} ${item.indent ? 'sidebar-indent' : ''}" data-section="${item.id}">
-            <span class="settings-sidebar-icon">${BRAND_ICONS[item.icon] || item.icon}</span>
-            <span class="settings-sidebar-label">${item.label}</span>
-          </button>
-        `).join('')}
+        ${section.items.map(item => renderSidebarItem(item)).join('')}
       </div>
     `).join('')}
   `;
 
-  sidebar.querySelectorAll('.settings-sidebar-item').forEach(btn => {
+  // Collapsible parent toggle
+  sidebar.querySelectorAll('[data-collapsible="true"]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const section = (btn as HTMLElement).dataset.section!;
+      if (section === 'scoring') {
+        scoringExpanded = !scoringExpanded;
+      }
+      activeSection = section;
+      renderSidebar(container);
+      renderSection(container);
+    });
+  });
+
+  // Regular item click
+  sidebar.querySelectorAll('.settings-sidebar-item:not([data-collapsible])').forEach(btn => {
     btn.addEventListener('click', () => {
-      activeSection = (btn as HTMLElement).dataset.section!;
+      const section = (btn as HTMLElement).dataset.section!;
+      // Auto-expand parent when clicking a child
+      if (section.startsWith('scoring-')) {
+        scoringExpanded = true;
+      }
+      activeSection = section;
       renderSidebar(container);
       renderSection(container);
     });
