@@ -5,7 +5,7 @@ import type { AgentResponse } from '@modernleads/shared';
 import { getLead, listLeads, changeStage, updateLead, logTelemetry } from '../db/repository.js';
 import { mapLeadToOpportunity, toBcPayload } from '../conversion/mapping.js';
 import { createBcOpportunity } from '../bcAdapter/client.js';
-import { createOpportunity } from '../db/repository.js';
+import { createOpportunity, getAgentCharter } from '../db/repository.js';
 
 interface PendingAction {
   type: string;
@@ -236,6 +236,17 @@ router.post('/chat', async (req, res, next) => {
       return;
     }
 
+    // Agent Charter queries — detect questions about priorities, challenges, growth, charter, mission, strategy
+    const charterKeywords = ['charter', 'priorities', 'priority', 'mission', 'focus', 'core', 'challenges', 'setback', 'difficulties', 'struggle', 'growth', 'opportunities', 'opportunity', 'strategy', 'strategic', 'how are we doing', 'how is it going', 'what should', 'what are we', 'what do we focus'];
+    const isCharterQuery = charterKeywords.some(kw => msg.includes(kw));
+    if (isCharterQuery) {
+      const charter = getAgentCharter();
+      const reply = buildCharterResponse(msg, charter);
+      const response: AgentResponse = { reply };
+      res.json(response);
+      return;
+    }
+
     // Default
     const response: AgentResponse = {
       reply: "I can help you manage leads. Try: 'show new leads', 'prioritize my leads', 'convert lead <id>'",
@@ -247,3 +258,102 @@ router.post('/chat', async (req, res, next) => {
 });
 
 export default router;
+
+function buildCharterResponse(
+  msg: string,
+  charter: { corePriorities: string; challenges: Array<{ description: string; response: string }>; growthOpportunities: Array<{ description: string }> },
+): string {
+  const leads = listLeads();
+  const totalLeads = leads.length;
+  const newLeads = leads.filter(l => l.stage === 'New').length;
+  const qualifiedLeads = leads.filter(l => l.stage === 'Qualified').length;
+  const convertedLeads = leads.filter(l => l.stage === 'Converted').length;
+  const avgScore = totalLeads > 0 ? Math.round(leads.reduce((s, l) => s + l.score, 0) / totalLeads) : 0;
+
+  // Detect which section the user is asking about
+  const askingChallenges = /challenge|setback|difficult|struggle|problem|issue|blocker/.test(msg);
+  const askingGrowth = /growth|opportunit|expand|improve|strategic|strategy/.test(msg);
+  const askingPriorities = /priorit|mission|focus|core|charter|how are we doing|how is it going|what should|what are we|what do we focus/.test(msg);
+
+  const parts: string[] = [];
+
+  if (askingPriorities || (!askingChallenges && !askingGrowth)) {
+    // Parse numbered priorities from the text
+    const priorityLines = charter.corePriorities
+      .split('\n')
+      .filter(line => /^\d+\./.test(line.trim()))
+      .map(line => line.replace(/\*\*/g, '').trim());
+
+    parts.push(`📋 **Here's how we're tracking against our Core Priorities:**\n`);
+    parts.push(`We currently have ${totalLeads} leads in the pipeline (${newLeads} new, ${qualifiedLeads} qualified, ${convertedLeads} converted). Average lead score is ${avgScore}.\n`);
+
+    if (priorityLines.length > 0) {
+      // Cross-reference priorities with actual pipeline data
+      const insights: string[] = [];
+
+      if (priorityLines.some(l => /qualification speed/i.test(l))) {
+        if (newLeads > 0) {
+          insights.push(`⏱️ **Qualification Speed**: ${newLeads} lead(s) still in "New" — need to assess and move them within 24 hours.`);
+        } else {
+          insights.push(`✅ **Qualification Speed**: No leads stuck in "New" — we're qualifying fast.`);
+        }
+      }
+
+      if (priorityLines.some(l => /follow.up/i.test(l))) {
+        const contactedLeads = leads.filter(l => l.stage === 'Contacted');
+        if (contactedLeads.length > 0) {
+          insights.push(`📞 **Follow-Up Discipline**: ${contactedLeads.length} lead(s) in "Contacted" stage awaiting follow-up.`);
+        } else {
+          insights.push(`✅ **Follow-Up Discipline**: All contacted leads have been progressed.`);
+        }
+      }
+
+      if (priorityLines.some(l => /pipeline hygiene/i.test(l))) {
+        const disqualified = leads.filter(l => l.stage === 'Disqualified').length;
+        insights.push(`🧹 **Pipeline Hygiene**: ${disqualified} disqualified lead(s) cleaned from the active pipeline.`);
+      }
+
+      if (priorityLines.some(l => /conversion/i.test(l))) {
+        const convRate = totalLeads > 0 ? Math.round((convertedLeads / totalLeads) * 100) : 0;
+        insights.push(`🎯 **Conversion Focus**: Overall conversion rate is ${convRate}% (${convertedLeads}/${totalLeads}).`);
+      }
+
+      if (insights.length > 0) {
+        parts.push(insights.join('\n'));
+      } else {
+        parts.push(`Our priorities are set. Here's a summary:\n${priorityLines.slice(0, 4).join('\n')}`);
+      }
+    }
+  }
+
+  if (askingChallenges) {
+    parts.push(`\n⚠️ **Current Challenges & Setbacks** (${charter.challenges.length}):\n`);
+    if (charter.challenges.length === 0) {
+      parts.push('No challenges documented yet. Add some in the Agent Charter page.');
+    } else {
+      for (const c of charter.challenges.slice(0, 5)) {
+        parts.push(`• **Challenge**: ${c.description}`);
+        parts.push(`  → **Action**: ${c.response}\n`);
+      }
+      if (charter.challenges.length > 5) {
+        parts.push(`...and ${charter.challenges.length - 5} more. See the Agent Charter for the full list.`);
+      }
+    }
+  }
+
+  if (askingGrowth) {
+    parts.push(`\n🌱 **Growth Opportunities** (${charter.growthOpportunities.length}):\n`);
+    if (charter.growthOpportunities.length === 0) {
+      parts.push('No growth opportunities documented yet. Add some in the Agent Charter page.');
+    } else {
+      for (const g of charter.growthOpportunities.slice(0, 5)) {
+        parts.push(`• ${g.description}`);
+      }
+      if (charter.growthOpportunities.length > 5) {
+        parts.push(`\n...and ${charter.growthOpportunities.length - 5} more. See the Agent Charter for the full list.`);
+      }
+    }
+  }
+
+  return parts.join('\n');
+}
