@@ -6,6 +6,7 @@ import {
   getNotificationSettings, setNotificationSettings,
   getGeneralSettings, setGeneralSettings,
   getEntraSettings, setEntraSettings,
+  getAgentCharter, setAgentCharter,
 } from '../db/repository.js';
 
 const router: RouterType = Router();
@@ -156,6 +157,17 @@ router.get('/entra', (_req, res) => {
 
 router.put('/entra', (req, res) => {
   const result = setEntraSettings(req.body);
+  res.json(result);
+});
+
+// === Agent Charter ===
+
+router.get('/agent-charter', (_req, res) => {
+  res.json(getAgentCharter());
+});
+
+router.put('/agent-charter', (req, res) => {
+  const result = setAgentCharter(req.body);
   res.json(result);
 });
 

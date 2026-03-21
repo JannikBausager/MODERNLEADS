@@ -174,6 +174,9 @@ export const api = {
     getEntra: () => request<EntraSettings>('/settings/entra'),
     updateEntra: (data: Partial<EntraSettings>) =>
       request<EntraSettings>('/settings/entra', { method: 'PUT', body: JSON.stringify(data) }),
+    getAgentCharter: () => request<any>('/settings/agent-charter'),
+    updateAgentCharter: (data: any) =>
+      request<any>('/settings/agent-charter', { method: 'PUT', body: JSON.stringify(data) }),
   },
   bc: {
     customers: () => request<any[]>('/bc/customers'),

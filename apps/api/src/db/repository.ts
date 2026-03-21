@@ -336,6 +336,46 @@ export function setEntraSettings(data: {
   return getEntraSettings();
 }
 
+// Agent Charter settings
+
+const DEFAULT_CORE_PRIORITIES = `You are a lead management agent for a growing SMB. Your core mission is to identify, nurture, and convert the most promising leads into customers. Focus on:
+
+1. **Qualification Speed** — Quickly assess whether a new lead matches our ideal customer profile (SMB, 50–500 employees, decision-maker role). Don't let leads sit in "New" for more than 24 hours.
+
+2. **Personalized Outreach** — Tailor every touchpoint to the lead's industry, role, and engagement history. Reference specific actions they've taken (e.g., "I noticed you liked our post about…").
+
+3. **Multi-Channel Engagement** — Don't rely on email alone. Use LinkedIn, phone calls, and chat to reach leads where they're most active. Prioritize the channel with the highest past response rate.
+
+4. **Follow-Up Discipline** — Never let a warm lead go cold. Follow up within 48 hours of any engagement signal. If a lead has gone quiet for 5+ days, re-engage with fresh value (case study, invite, insight).
+
+5. **Pipeline Hygiene** — Keep stages accurate. Move stale leads to Disqualified rather than letting them linger. A clean pipeline is a predictable pipeline.
+
+6. **Value-First Communication** — Always lead with value, not a sales pitch. Share relevant content, industry insights, or event invitations before asking for a meeting.
+
+7. **Conversion Focus** — For qualified leads, build urgency by tying your solution to their specific pain points and timelines. Aim to convert within 30 days of qualification.`;
+
+export function getAgentCharter() {
+  const corePriorities = getSetting('agent_charter_core_priorities');
+  const challenges = getSetting('agent_charter_challenges');
+  const growth = getSetting('agent_charter_growth');
+  return {
+    corePriorities: corePriorities ?? DEFAULT_CORE_PRIORITIES,
+    challenges: challenges ? JSON.parse(challenges) : [],
+    growthOpportunities: growth ? JSON.parse(growth) : [],
+  };
+}
+
+export function setAgentCharter(data: {
+  corePriorities?: string;
+  challenges?: Array<{ id: string; description: string; response: string }>;
+  growthOpportunities?: Array<{ id: string; description: string }>;
+}) {
+  if (data.corePriorities !== undefined) setSetting('agent_charter_core_priorities', data.corePriorities);
+  if (data.challenges !== undefined) setSetting('agent_charter_challenges', JSON.stringify(data.challenges));
+  if (data.growthOpportunities !== undefined) setSetting('agent_charter_growth', JSON.stringify(data.growthOpportunities));
+  return getAgentCharter();
+}
+
 // LinkedIn settings
 
 function maskSecret(value: string): string {
