@@ -69,7 +69,7 @@ export async function renderAgentCharter(container: HTMLElement): Promise<void> 
             <thead>
               <tr>
                 <th class="charter-col-challenge">Challenge</th>
-                <th class="charter-col-response">Response Suggestion</th>
+                <th class="charter-col-response">Action Needed</th>
                 <th class="charter-col-actions"></th>
               </tr>
             </thead>
