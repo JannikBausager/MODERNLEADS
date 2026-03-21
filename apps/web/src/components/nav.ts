@@ -65,11 +65,17 @@ function showNewLeadModal(): void {
           <label>Source</label>
           <select name="source" class="form-input">
             <option value="">Select source</option>
-            <option value="website">Website</option>
-            <option value="referral">Referral</option>
-            <option value="cold-call">Cold Call</option>
             <option value="linkedin">LinkedIn</option>
-            <option value="other">Other</option>
+            <option value="facebook">Facebook</option>
+            <option value="instagram">Instagram</option>
+            <option value="tiktok">TikTok</option>
+            <option value="twitter">X / Twitter</option>
+            <option value="website">Website</option>
+            <option value="email">Email</option>
+            <option value="form">Form</option>
+            <option value="chatbot">Chatbot</option>
+            <option value="referral">Referral</option>
+            <option value="manual">Manual</option>
           </select>
         </div>
         <div class="form-group">

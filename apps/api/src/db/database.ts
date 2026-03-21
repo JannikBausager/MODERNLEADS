@@ -17,7 +17,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS leads (
     id TEXT PRIMARY KEY,
     createdAt TEXT NOT NULL DEFAULT (datetime('now')),
-    source TEXT NOT NULL CHECK(source IN ('email','form','chatbot','manual')),
+    source TEXT NOT NULL CHECK(source IN ('email','form','chatbot','manual','linkedin','facebook','instagram','tiktok','twitter','website','referral')),
     owner TEXT NOT NULL DEFAULT 'unassigned',
     companyName TEXT NOT NULL,
     contactName TEXT NOT NULL,
@@ -84,6 +84,37 @@ db.exec(`
 
 // Insert default settings
 const insertSetting = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');
+
+// Migration: widen source CHECK constraint to include social channels
+try {
+  const tableInfo = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='leads'").get() as any;
+  if (tableInfo?.sql && !tableInfo.sql.includes("'linkedin'")) {
+    db.exec(`
+      CREATE TABLE leads_new (
+        id TEXT PRIMARY KEY,
+        createdAt TEXT NOT NULL DEFAULT (datetime('now')),
+        source TEXT NOT NULL CHECK(source IN ('email','form','chatbot','manual','linkedin','facebook','instagram','tiktok','twitter','website','referral')),
+        owner TEXT NOT NULL DEFAULT 'unassigned',
+        companyName TEXT NOT NULL,
+        contactName TEXT NOT NULL,
+        email TEXT NOT NULL,
+        phone TEXT DEFAULT '',
+        intentSummary TEXT DEFAULT '',
+        productInterest TEXT DEFAULT '',
+        stage TEXT NOT NULL DEFAULT 'New' CHECK(stage IN ('New','Contacted','Qualified','Disqualified','Converted')),
+        score INTEGER DEFAULT 0 CHECK(score >= 0 AND score <= 100),
+        nextBestAction TEXT DEFAULT '',
+        lastInteractionAt TEXT,
+        consentFlags TEXT DEFAULT '{}',
+        rawPayload TEXT DEFAULT 'null',
+        enrichedFields TEXT DEFAULT '{}'
+      );
+      INSERT INTO leads_new SELECT * FROM leads;
+      DROP TABLE leads;
+      ALTER TABLE leads_new RENAME TO leads;
+    `);
+  }
+} catch { /* migration already applied or not needed */ }
 
 // BC MCP connection defaults
 insertSetting.run('bc_tenant', 'DirectionsEmeaWorkshop1.onmicrosoft.com');

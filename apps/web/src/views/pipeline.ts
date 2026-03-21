@@ -15,6 +15,27 @@ const SOURCE_ICONS: Record<string, string> = {
   form: '📋',
   chatbot: '💬',
   manual: '✏️',
+  linkedin: '🔗',
+  website: '🌐',
+  referral: '🤝',
+  facebook: '📘',
+  instagram: '📸',
+  tiktok: '🎵',
+  twitter: '🐦',
+};
+
+const SOURCE_LABELS: Record<string, string> = {
+  email: 'Email',
+  form: 'Form',
+  chatbot: 'Chatbot',
+  manual: 'Manual',
+  linkedin: 'LinkedIn',
+  website: 'Website',
+  referral: 'Referral',
+  facebook: 'Facebook',
+  instagram: 'Instagram',
+  tiktok: 'TikTok',
+  twitter: 'X / Twitter',
 };
 
 function timeAgo(dateStr: string): string {
@@ -220,7 +241,8 @@ function buildCard(lead: Lead, stage: string, pipelineContainer: HTMLElement): H
 
   const score = lead.score ?? 0;
   const sClass = scoreClass(score);
-  const sourceIcon = SOURCE_ICONS[lead.source ?? ''] ?? '';
+  const sourceIcon = SOURCE_ICONS[lead.source ?? ''] ?? '📌';
+  const sourceLabel = SOURCE_LABELS[lead.source ?? ''] ?? lead.source ?? '';
   const age = timeAgo(lead.createdAt);
   const newIn24h = stage === 'New' && isNew24h(lead.createdAt);
 
@@ -245,7 +267,7 @@ function buildCard(lead: Lead, stage: string, pipelineContainer: HTMLElement): H
 
   html += `
     <div class="pipeline-card-footer">
-      <span class="pipeline-card-source">${sourceIcon}</span>
+      <span class="pipeline-card-source" title="${sourceLabel}">${sourceIcon} ${sourceLabel}</span>
       <span class="pipeline-card-age">${age}</span>
     </div>
   `;
