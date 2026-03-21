@@ -198,4 +198,8 @@ export const api = {
     resetScoringDefaults: () => request<any>('/linkedin/scoring-rules/reset', { method: 'POST' }),
     interpretRule: (text: string) => request<any>('/linkedin/interpret-rule', { method: 'POST', body: JSON.stringify({ text }) }),
   },
+  stats: {
+    get: (filters?: { source?: string; dateFrom?: string; dateTo?: string }) =>
+      request<any>('/stats' + qs(filters ?? {})),
+  },
 };

@@ -30,7 +30,6 @@ export async function renderLinkedInScoring(container: HTMLElement): Promise<voi
         <h1 style="display:flex;align-items:center;gap:.5rem">${LINKEDIN_ICON} LinkedIn Lead Scoring</h1>
         <p class="scoring-page-subtitle">Configure how LinkedIn engagement signals are scored to prioritize your best leads.</p>
       </div>
-      <div id="scoring-categories-area"><p style="color:#5f6368;">Loading scoring rules...</p></div>
       <div class="nl-rule-creator" id="nl-rule-creator">
         <h3>Natural Language Rule Creator</h3>
         <p style="font-size:.85rem;color:#5f6368;margin-bottom:.75rem;">Describe a scoring rule in plain English and we'll parse it for you.</p>
@@ -40,6 +39,7 @@ export async function renderLinkedInScoring(container: HTMLElement): Promise<voi
         </div>
         <div id="nl-rule-preview"></div>
       </div>
+      <div id="scoring-categories-area"><p style="color:#5f6368;">Loading scoring rules...</p></div>
       <div class="scoring-page-actions">
         <button class="btn btn-primary" id="scoring-save-btn">Save Changes</button>
         <button class="btn btn-secondary" id="scoring-reset-btn">Reset to Defaults</button>
