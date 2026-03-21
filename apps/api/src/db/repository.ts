@@ -361,9 +361,44 @@ export function getAgentCharter() {
   return {
     corePriorities: corePriorities ?? DEFAULT_CORE_PRIORITIES,
     challenges: challenges ? JSON.parse(challenges) : DEFAULT_CHALLENGES,
-    growthOpportunities: growth ? JSON.parse(growth) : [],
+    growthOpportunities: growth ? JSON.parse(growth) : DEFAULT_GROWTH,
   };
 }
+
+const DEFAULT_GROWTH: Array<{ id: string; description: string }> = [
+  {
+    id: 'dg1',
+    description: 'I see that other companies in our industry have started promoting their products in Copilot product searches. Shopify and other platforms provide this capability — consider switching it on to capture AI-assisted buying intent before competitors do.',
+  },
+  {
+    id: 'dg2',
+    description: 'Our competitors are running short-form video campaigns on TikTok and Instagram Reels targeting younger decision-makers at tech startups. We have zero presence there. A 30-day pilot with 2-3 product demo clips could open a new lead channel.',
+  },
+  {
+    id: 'dg3',
+    description: 'I noticed that 40% of our qualified leads mention "integration with existing tools" as a top concern. Publishing a comparison page or integration guide (e.g., "How we connect with Salesforce, HubSpot, and Teams") could shorten the qualification cycle significantly.',
+  },
+  {
+    id: 'dg4',
+    description: 'Several leads have asked whether we offer a free trial or sandbox environment. Companies like Notion and Figma convert 3x more leads through self-serve trials. Consider launching a limited free tier or 14-day trial to let prospects experience the product before committing.',
+  },
+  {
+    id: 'dg5',
+    description: 'LinkedIn engagement on our company page has doubled in the last 60 days, but we are not converting followers into leads. Adding a lead magnet (e.g., an industry report or ROI calculator) with a gated download could capture this growing audience.',
+  },
+  {
+    id: 'dg6',
+    description: 'I have identified a cluster of leads in the healthcare vertical that we have not actively targeted. Three of our last five converted deals were in healthcare. Consider creating vertical-specific messaging and a dedicated landing page for this segment.',
+  },
+  {
+    id: 'dg7',
+    description: 'Our email open rates are strong (38%) but click-through is low (4%). A/B testing with personalized video thumbnails embedded in emails — tools like Loom or Vidyard offer this — could lift engagement and move leads to the next stage faster.',
+  },
+  {
+    id: 'dg8',
+    description: 'Webinar registrations have been a consistent source of high-quality leads. Hosting a monthly "Ask Me Anything" or customer success spotlight webinar could create a recurring pipeline of engaged prospects at low cost.',
+  },
+];
 
 const DEFAULT_CHALLENGES: Array<{ id: string; description: string; response: string }> = [
   {
