@@ -112,8 +112,8 @@ export async function renderAgentCharter(container: HTMLElement): Promise<void> 
 function renderChallengeRow(c: Challenge): string {
   return `
     <tr data-id="${c.id}">
-      <td><textarea class="charter-cell-input challenge-desc" rows="3" placeholder="Describe the challenge...">${escapeHtml(c.description)}</textarea></td>
-      <td><textarea class="charter-cell-input challenge-response" rows="3" placeholder="How should the agent respond?">${escapeHtml(c.response)}</textarea></td>
+      <td><textarea class="charter-cell-input challenge-desc" rows="5" placeholder="Describe the challenge...">${escapeHtml(c.description)}</textarea></td>
+      <td><textarea class="charter-cell-input challenge-response" rows="5" placeholder="How should the agent respond?">${escapeHtml(c.response)}</textarea></td>
       <td class="charter-cell-actions"><button type="button" class="charter-remove-btn" data-remove="challenge" data-id="${c.id}" title="Remove row">✕</button></td>
     </tr>
   `;
