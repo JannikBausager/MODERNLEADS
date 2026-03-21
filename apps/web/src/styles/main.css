@@ -2483,3 +2483,156 @@ tr:hover td {
   .pipeline-board { gap: .5rem; }
   .pipeline-col { min-width: 160px; }
 }
+
+/* === Agile Feedback Agent (Dev Mode) === */
+
+.dev-mode .feedback-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.feedback-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.feedback-table thead th {
+  background: #f1f5f9;
+  font-weight: 600;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #475569;
+  padding: 0.65rem 0.75rem;
+  text-align: left;
+  border-bottom: 2px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.fb-col-rank { width: 60px; text-align: center; }
+.fb-col-feedback { width: 30%; }
+.fb-col-source { width: 100px; }
+.fb-col-instruction { width: 45%; }
+
+.feedback-table tbody tr {
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.1s;
+}
+
+.feedback-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.feedback-table td {
+  padding: 0.6rem 0.75rem;
+  vertical-align: top;
+  line-height: 1.5;
+}
+
+.fb-cell-rank {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.fb-rank-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.fb-rank-number {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #1e293b;
+  min-width: 24px;
+  text-align: center;
+}
+
+.fb-move-btn {
+  background: none;
+  border: 1px solid transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.15s;
+  line-height: 1;
+}
+
+.fb-move-btn:hover:not(:disabled) {
+  color: #6366f1;
+  background: #f5f3ff;
+  border-color: #e0e7ff;
+}
+
+.fb-move-btn:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.fb-cell-feedback {
+  color: #334155;
+  font-size: 0.84rem;
+}
+
+.fb-source-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.fb-source-ocv { background: #dbeafe; color: #1d4ed8; }
+.fb-source-email { background: #fef3c7; color: #b45309; }
+.fb-source-event { background: #ede9fe; color: #7c3aed; }
+.fb-source-forms { background: #d1fae5; color: #047857; }
+.fb-source-supportticket { background: #fee2e2; color: #dc2626; }
+.fb-source-userinterview { background: #e0f2fe; color: #0369a1; }
+.fb-source-appreview { background: #fce7f3; color: #be185d; }
+.fb-source-socialmedia { background: #f0fdf4; color: #15803d; }
+.fb-source-internalqa { background: #f1f5f9; color: #475569; }
+.fb-source-telemetry { background: #fdf4ff; color: #a21caf; }
+
+.fb-cell-instruction {
+  font-size: 0.82rem;
+  color: #475569;
+}
+
+.fb-instruction-wrap {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.fb-instruction-text {
+  flex: 1;
+  line-height: 1.55;
+}
+
+.fb-copy-btn {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  font-size: 0.95rem;
+  padding: 4px 7px;
+  border-radius: 6px;
+  transition: all 0.15s;
+  margin-top: 1px;
+}
+
+.fb-copy-btn:hover {
+  background: #f5f3ff;
+  border-color: #c7d2fe;
+  transform: scale(1.1);
+}

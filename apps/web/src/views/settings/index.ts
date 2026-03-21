@@ -1,5 +1,6 @@
 import { renderGeneralSettings } from './general.js';
 import { renderScoringSettings } from './scoring.js';
+import { renderDevMode } from './devMode.js';
 import { renderNotificationSettings } from './notifications.js';
 import { renderBcConnection } from './bcConnection.js';
 import { renderConnectionCategory } from './integrations.js';
@@ -31,6 +32,7 @@ const SIDEBAR_SECTIONS: SidebarGroup[] = [
     group: 'Lead Agent',
     items: [
       { id: 'general', label: 'General', icon: '⚙️' },
+      { id: 'dev-mode', label: 'Dev Mode', icon: '🛠️' },
       {
         id: 'scoring', label: 'Scoring', icon: '📊',
         children: [
@@ -158,6 +160,9 @@ function renderSection(container: HTMLElement): void {
   switch (activeSection) {
     case 'general':
       renderGeneralSettings(content);
+      break;
+    case 'dev-mode':
+      renderDevMode(content);
       break;
     case 'scoring':
       renderScoringSettings(content);
