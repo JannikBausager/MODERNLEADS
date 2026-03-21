@@ -1,5 +1,4 @@
 import { renderGeneralSettings } from './general.js';
-import { renderAgentCharter } from './agentCharter.js';
 import { renderScoringSettings } from './scoring.js';
 import { renderNotificationSettings } from './notifications.js';
 import { renderBcConnection } from './bcConnection.js';
@@ -32,7 +31,6 @@ const SIDEBAR_SECTIONS: SidebarGroup[] = [
     group: 'Lead Agent',
     items: [
       { id: 'general', label: 'General', icon: '⚙️' },
-      { id: 'agent-charter', label: 'Agent Charter', icon: '🧭' },
       {
         id: 'scoring', label: 'Scoring', icon: '📊',
         children: [
@@ -160,9 +158,6 @@ function renderSection(container: HTMLElement): void {
   switch (activeSection) {
     case 'general':
       renderGeneralSettings(content);
-      break;
-    case 'agent-charter':
-      renderAgentCharter(content);
       break;
     case 'scoring':
       renderScoringSettings(content);

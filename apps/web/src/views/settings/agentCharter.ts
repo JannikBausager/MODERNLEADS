@@ -36,7 +36,7 @@ export async function renderAgentCharter(container: HTMLElement): Promise<void> 
   }
 
   container.innerHTML = `
-    <div class="settings-panel agent-charter">
+    <div class="settings-panel agent-charter" style="max-width:900px;margin:0 auto;padding:2rem 1.5rem;">
       <div class="settings-panel-header">
         <h2>🧭 Agent Charter</h2>
         <p class="settings-panel-desc">Define your Lead Agent's mission, acknowledge its challenges, and guide its growth.</p>

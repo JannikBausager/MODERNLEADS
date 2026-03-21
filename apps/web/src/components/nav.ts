@@ -5,6 +5,7 @@ import { showToast } from './toast';
 export function renderTopbar(container: HTMLElement): void {
   const path = currentPath();
   const isPipeline = path === '/' || path.startsWith('/pipeline') || path.startsWith('/leads/');
+  const isCharter = path.startsWith('/agent-charter');
   const isStatistics = path.startsWith('/statistics');
   const isSettings = path.startsWith('/settings');
 
@@ -14,6 +15,7 @@ export function renderTopbar(container: HTMLElement): void {
         <span class="topbar-brand">Lead Agent</span>
         <nav class="topbar-nav">
           <a href="#/pipeline" class="topbar-link ${isPipeline ? 'active' : ''}">Pipeline</a>
+          <a href="#/agent-charter" class="topbar-link ${isCharter ? 'active' : ''}">Agent Charter</a>
           <a href="#/statistics" class="topbar-link ${isStatistics ? 'active' : ''}">Statistics</a>
           <a href="#/settings" class="topbar-link ${isSettings ? 'active' : ''}">Settings</a>
         </nav>

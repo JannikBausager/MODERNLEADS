@@ -5,6 +5,7 @@ import { renderPipeline } from './views/pipeline.js';
 import { renderDetail } from './views/detail.js';
 import { render as renderSettings } from './views/settings/index.js';
 import { renderStatistics } from './views/statistics.js';
+import { renderAgentCharter } from './views/settings/agentCharter.js';
 
 function boot() {
   const topbar = document.getElementById('topbar')!;
@@ -19,6 +20,7 @@ function boot() {
   addRoute('/leads/:id', (el, params) => renderDetail(el, params.id));
   addRoute('/settings', (el) => renderSettings(el));
   addRoute('/statistics', (el) => renderStatistics(el));
+  addRoute('/agent-charter', (el) => renderAgentCharter(el));
 
   startRouter();
 
